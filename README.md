@@ -9,7 +9,7 @@ No backend you have to maintain, no paid services. The editor is one self-contai
 - `editor.html` — the builder. Lives in this repo, opens in any browser.
 - `worker.js` — the relay code you paste into a Cloudflare Worker (one time).
 - `reviews/` — generated review pages land here, one per campaign. Created automatically on first commit.
-- `sample-review.html` — a visual demo of what Matthew sees. Its buttons point at a placeholder relay, so clicking them demonstrates the failure fallback (a prefilled email) rather than posting to Asana. The real end-to-end test comes at the end of setup below.
+- `sample-review.html` — a visual demo of what Matthew sees, showcasing a multi-post carousel on X and Instagram with LinkedIn excluded. Its buttons point at a placeholder relay, so clicking them demonstrates the failure fallback (a prefilled email) rather than posting to Asana. The real end-to-end test comes at the end of setup below.
 
 ## One-time setup
 
@@ -47,10 +47,10 @@ Create a scratch task in the project, paste its link into the editor, generate a
 ## Per campaign
 
 1. Create the Asana task as usual and copy its link.
-2. Open the editor: paste the task link (the hint confirms the task ID), name the campaign, fill in copy + images. `copy → all` / `image → all` speed up identical posts; off-ratio images are auto-cropped to 4:5 and flagged.
+2. Open the editor: paste the task link (the hint confirms the task ID), name the campaign, fill in copy + images. Each platform card has an **on/off switch** in its header — flip off anything that isn't part of this round (the card dims; its drafts are kept for later). The numbered pills above the copy box manage **multiple posts per platform** — `+` adds one (up to six), each post has its own copy and image, and the live preview follows whichever pill is selected. `copy → all` / `image → all` push the current post's content to every platform's current post; off-ratio images are auto-cropped to 4:5 and flagged.
 3. Hit **Generate review page** — the file downloads, the share link lands on your clipboard, and a GitHub upload tab opens at `reviews/`.
 4. Drag the file in, commit, paste the share link into the Asana task, assign Matthew.
-5. Matthew clicks **Approve all four**, or **Revisions needed** + a Loom link or notes. Either way the bot comments “✅ Approved by Matthew” or “🔁 Revisions requested by Matthew” (plus his notes and the review link) and the task returns to you. If the relay is ever unreachable, the page falls back to a prefilled email so nothing is lost.
+5. Matthew sees only the platforms you enabled; a platform with several posts becomes a **swipeable carousel** with arrows, dots and a “2 / 3” counter, and the gold button adapts to the set (“Approve all 5”, or “Approve this post” for a single). He clicks that, or **Revisions needed** + a Loom link or notes. Either way the bot comments “✅ Approved by Matthew” or “🔁 Revisions requested by Matthew” (plus his notes and the review link) and the task returns to you. If the relay is ever unreachable, the page falls back to a prefilled email so nothing is lost.
 
 ## Revision rounds
 
@@ -69,7 +69,7 @@ In the Worker's variables add `ALLOWED_ORIGIN` = `https://longbeardcreative.gith
 - **Buttons show the email fallback** — the relay URL is wrong/unreachable, or `ALLOWED_ORIGIN` is set and you're testing from a different origin (e.g. a local file). Check the Worker's live logs: Worker → Logs → Begin log stream, then click the button again.
 - **GitHub tab didn't open** — popup blocker; use the button in the green success panel.
 - **Link 404s right after committing** — Pages is still building; give it a minute.
-- **Drafts** — autosaved per-browser via localStorage. **Clear draft** wipes the campaign (keeps repo + relay settings).
+- **Drafts** — autosaved per-browser via localStorage. **Clear draft** wipes the campaign's posts (keeps platform switches, repo + relay settings). Drafts made in the previous one-post version migrate automatically.
 
 ## Notes on privacy and trust
 

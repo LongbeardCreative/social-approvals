@@ -96,6 +96,21 @@ main.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));
 .imgrow .ok{color:var(--gold)}
 .linkbtn{background:none;border:none;color:var(--mut);text-decoration:underline;font-size:12.5px;padding:0}
 .linkbtn:hover{color:var(--bad)}
+.sw{position:relative;display:inline-flex;align-items:center;flex:none}
+.sw input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.sw i{width:34px;height:20px;border-radius:999px;background:var(--line2);position:relative;display:block;transition:background .15s}
+.sw i:after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#6e675c;transition:left .15s,background .15s}
+.sw input:checked + i{background:var(--gold-dim)}
+.sw input:checked + i:after{left:16px;background:var(--gold-bright)}
+.sw input:focus-visible + i{outline:2px solid var(--gold);outline-offset:2px}
+.tabs{display:flex;align-items:center;gap:6px;padding:12px 18px 0}
+.tab{min-width:30px;height:28px;border-radius:8px;border:1px solid var(--line2);background:transparent;color:var(--mut);font-size:13px;font-weight:600;padding:0 8px}
+.tab:hover{border-color:var(--gold-dim);color:var(--text)}
+.tab.on{border-color:var(--gold);color:var(--gold-bright);background:#1a160e}
+.tabs .rm{margin-left:auto}
+.card.off .tabs,.card.off .ctrl,.card.off .pvzone,.card.off .apply{opacity:.35;pointer-events:none}
+.card.off .plat{color:var(--mut)}
+.card.off .plat:after{content:' — excluded';font-weight:500;letter-spacing:.02em;text-transform:none}
 .card .pvzone{background:var(--inset);border-top:1px solid var(--line);padding:20px 18px 24px;flex:1}
 .card .pvzone .eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 14px 2px}
 footer.app{margin-top:44px;color:var(--mut);font-size:12.5px;text-align:center}
@@ -199,6 +214,7 @@ var MOCKUP_CSS = [
 '.slot{margin:0 auto 36px;max-width:480px}',
 '.slot:last-child{margin-bottom:0}',
 '.slot-tag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#c49d4d;font-weight:600;margin:0 2px 10px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}',
+'.slot-tag em{font-style:normal;font-weight:500;color:#9b9489;letter-spacing:.04em}',
 '.mk{background:#fff;text-align:left;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto}',
 '.mk,.mk *{box-sizing:border-box}',
 '.mk p,.mk div{margin:0}',
@@ -302,12 +318,13 @@ var state = {
   gh:'longbeardcreative', repo:'social-approvals',
   asana:'', relay:'',
   p:{
-    x:{copy:'',img:null,note:''},
-    ig:{copy:'',img:null,note:''},
-    fb:{copy:'',img:null,note:''},
-    li:{copy:'',img:null,note:''}
+    x:{on:true,cur:0,posts:[{copy:'',img:null,note:''}]},
+    ig:{on:true,cur:0,posts:[{copy:'',img:null,note:''}]},
+    fb:{on:true,cur:0,posts:[{copy:'',img:null,note:''}]},
+    li:{on:true,cur:0,posts:[{copy:'',img:null,note:''}]}
   }
 };
+var MAX_POSTS = 6;
 
 /* ===================== helpers ===================== */
 function q(s){ return document.querySelector(s); }
@@ -344,6 +361,8 @@ function updateAsanaHint(){
     h.innerHTML = 'No task ID found in that &mdash; paste the full task URL from Asana (or the bare numeric ID).';
   }
 }
+function newPost(){ return {copy:'',img:null,note:''}; }
+function curPost(id){ var s = state.p[id]; return s.posts[s.cur]; }
 function fitText(copy, mutMsg){
   var t = (copy||'').trim();
   if(!t) return '<div class="txt mut">'+mutMsg+'</div>';
@@ -355,8 +374,8 @@ function imgBlock(img){
 }
 
 /* ===================== mockup builders ===================== */
-function mock(id){
-  var d = state.p[id], A = esc(state.account), H = esc(state.handle);
+function mock(id, post){
+  var d = post, A = esc(state.account), H = esc(state.handle);
   if(id === 'x'){
     return '<div class="mk mk-x"><div class="row">'+
       '<img class="av" src="'+AVATAR+'" alt="">'+
@@ -463,6 +482,18 @@ textarea:focus{border-color:var(--gold-dim);outline:none}
 footer{margin-top:38px;color:var(--mut);font-size:12px;text-align:center}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.car{position:relative;max-width:480px;margin:0 auto}
+.car-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:14px}
+.car-track::-webkit-scrollbar{display:none}
+.car-item{flex:0 0 100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always}
+.car-bar{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px}
+.car-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);background:var(--panel);color:var(--gold-bright);font-size:18px;line-height:30px;font-weight:600;padding:0}
+.car-btn:hover{border-color:var(--gold-dim)}
+.car-btn:disabled{opacity:.3;cursor:default}
+.car-dots{display:flex;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--line2)}
+.dot.on{background:var(--gold)}
+.car-count{font-size:12px;color:var(--mut);min-width:34px;text-align:center}
 /*__MOCKUP_CSS__*/
 </style>
 </head>
@@ -475,13 +506,13 @@ footer{margin-top:38px;color:var(--mut);font-size:12px;text-align:center}
     <p>Social asset review &middot; __DATE__ &middot; Magisterium AI</p>
   </div>
 </header>
-<p class="note">Four posts are below, shown as they will appear on each platform. Scroll through, then choose at the bottom.</p>
+<p class="note">__INTRO__</p>
 <main><!--__MOCKUPS__--></main>
 <section class="decide" id="decide">
   <h2>Your decision</h2>
   <p class="sub">One decision covers the whole set. It is posted straight to the Asana task, and the task returns to Johan automatically.</p>
   <div class="btns" id="btns">
-    <button class="b-gold" id="approve" type="button">Approve all four</button>
+    <button class="b-gold" id="approve" type="button">__APPROVE_LABEL__</button>
     <button class="b-line" id="revise" type="button">Revisions needed</button>
   </div>
   <div id="revbox" hidden>
@@ -544,6 +575,41 @@ footer{margin-top:38px;color:var(--mut);font-size:12px;text-align:center}
       } else { fail(decision, notes); }
     }).catch(function(){ fail(decision, notes); });
   }
+  /* carousels for platforms with multiple posts */
+  var cars = document.querySelectorAll('.car');
+  Array.prototype.forEach.call(cars, function(car){
+    var track = car.querySelector('.car-track');
+    var prev = car.querySelector('.car-btn.prev');
+    var next = car.querySelector('.car-btn.next');
+    var dots = car.querySelectorAll('.dot');
+    var count = car.querySelector('.car-count');
+    var n = dots.length;
+    if (!track || n < 2) return;
+    function idx(){
+      var w = track.clientWidth;
+      if (!w) return 0;
+      var i = Math.round(track.scrollLeft / (w + 14));
+      return Math.max(0, Math.min(n - 1, i));
+    }
+    function paint(){
+      var i = idx();
+      Array.prototype.forEach.call(dots, function(d, k){ d.className = k === i ? 'dot on' : 'dot'; });
+      count.textContent = (i + 1) + ' / ' + n;
+      prev.disabled = i === 0;
+      next.disabled = i === n - 1;
+    }
+    function go(d){
+      var i = Math.max(0, Math.min(n - 1, idx() + d));
+      try { track.scrollTo({ left: i * (track.clientWidth + 14), behavior: 'smooth' }); } catch(e){}
+      setTimeout(paint, 360);
+    }
+    prev.addEventListener('click', function(){ go(-1); });
+    next.addEventListener('click', function(){ go(1); });
+    var t;
+    track.addEventListener('scroll', function(){ clearTimeout(t); t = setTimeout(paint, 80); });
+    paint();
+  });
+
   bA.addEventListener('click', function(){ submit('Approved', ''); });
   bR.addEventListener('click', function(){ btns.hidden = true; revbox.hidden = false; fbx.focus(); });
   bB.addEventListener('click', function(){ revbox.hidden = true; btns.hidden = false; });
@@ -555,12 +621,14 @@ footer{margin-top:38px;color:var(--mut);font-size:12px;text-align:center}
 
 /* ===================== rendering ===================== */
 function cardHTML(p){
-  return '<section class="card" data-p="'+p.id+'">'+
+  return '<section class="card" data-p="'+p.id+'" id="card-'+p.id+'">'+
     '<div class="head"><span class="plat">'+p.label+'</span>'+
+      '<label class="sw" title="Include '+p.label+' in this review"><input type="checkbox" id="on-'+p.id+'" checked aria-label="Include '+p.label+' in the review"><i></i></label>'+
       '<span class="apply">'+
-        '<button class="mini" type="button" data-act="copyall" data-p="'+p.id+'" title="Use this copy on all four">copy &rarr; all</button>'+
-        '<button class="mini" type="button" data-act="imgall" data-p="'+p.id+'" title="Use this image on all four">image &rarr; all</button>'+
+        '<button class="mini" type="button" data-act="copyall" data-p="'+p.id+'" title="Use this post&#39;s copy on every platform&#39;s current post">copy &rarr; all</button>'+
+        '<button class="mini" type="button" data-act="imgall" data-p="'+p.id+'" title="Use this post&#39;s image on every platform&#39;s current post">image &rarr; all</button>'+
       '</span></div>'+
+    '<div class="tabs" id="tabs-'+p.id+'" role="tablist" aria-label="Posts for '+p.label+'"></div>'+
     '<div class="ctrl">'+
       '<textarea id="ta-'+p.id+'" placeholder="Post copy for '+p.label+'&hellip;" aria-label="Post copy for '+p.label+'"></textarea>'+
       (p.id==='x' ? '<div class="count" id="cnt-x">0 / 280</div>' : '')+
@@ -572,12 +640,35 @@ function cardHTML(p){
       '<div class="imgrow" id="ir-'+p.id+'"><img id="th-'+p.id+'" alt=""><span class="note" id="nt-'+p.id+'"></span>'+
         '<button class="linkbtn" type="button" data-act="rm" data-p="'+p.id+'">Remove</button></div>'+
     '</div>'+
-    '<div class="pvzone"><p class="eyebrow">Live preview</p><div id="pv-'+p.id+'"></div></div>'+
+    '<div class="pvzone"><p class="eyebrow" id="eb-'+p.id+'">Live preview</p><div id="pv-'+p.id+'"></div></div>'+
   '</section>';
 }
 
 function renderPreview(id){
-  q('#pv-'+id).innerHTML = mock(id);
+  q('#pv-'+id).innerHTML = mock(id, curPost(id));
+}
+function renderTabs(id){
+  var s = state.p[id], h = '';
+  for(var i=0;i<s.posts.length;i++){
+    h += '<button class="tab'+(i===s.cur?' on':'')+'" type="button" role="tab" aria-selected="'+(i===s.cur)+'" data-act="seltab" data-p="'+id+'" data-i="'+i+'">'+(i+1)+'</button>';
+  }
+  if(s.posts.length < MAX_POSTS)
+    h += '<button class="tab" type="button" data-act="addpost" data-p="'+id+'" title="Add another post" aria-label="Add another post">+</button>';
+  if(s.posts.length > 1)
+    h += '<button class="linkbtn rm" type="button" data-act="rmpost" data-p="'+id+'">remove post '+(s.cur+1)+'</button>';
+  q('#tabs-'+id).innerHTML = h;
+}
+function refreshCard(id){
+  var s = state.p[id];
+  renderTabs(id);
+  q('#ta-'+id).value = curPost(id).copy;
+  var eb = q('#eb-'+id);
+  eb.textContent = s.posts.length > 1 ? 'Live preview · post '+(s.cur+1)+' of '+s.posts.length : 'Live preview';
+  q('#card-'+id).classList.toggle('off', !s.on);
+  var cb = q('#on-'+id); if(cb) cb.checked = s.on;
+  updateImgRow(id);
+  updateCount();
+  renderPreview(id);
 }
 function renderAll(){
   PLATFORMS.forEach(function(p){ renderPreview(p.id); });
@@ -590,12 +681,12 @@ function updateUrlPrev(){
 }
 function updateCount(){
   var el = q('#cnt-x'); if(!el) return;
-  var n = state.p.x.copy.length;
+  var n = curPost('x').copy.length;
   el.textContent = n+' / 280';
   el.className = 'count'+(n>280?' over':'');
 }
 function updateImgRow(id){
-  var d = state.p[id], row = q('#ir-'+id), dz = q('#dz-'+id);
+  var d = curPost(id), row = q('#ir-'+id), dz = q('#dz-'+id);
   if(d.img){
     row.classList.add('show');
     q('#th-'+id).src = d.img;
@@ -641,15 +732,38 @@ function processFile(id, file){
   im.src = url;
 }
 function setImage(id, dataUri, note){
-  state.p[id].img = dataUri;
-  state.p[id].note = note || '';
+  var d = curPost(id);
+  d.img = dataUri;
+  d.note = note || '';
   updateImgRow(id);
   renderPreview(id);
   saveSoon();
 }
 function removeImage(id){
-  state.p[id].img = null; state.p[id].note = '';
+  var d = curPost(id);
+  d.img = null; d.note = '';
   updateImgRow(id); renderPreview(id); saveSoon();
+}
+function addPost(id){
+  var s = state.p[id];
+  if(s.posts.length >= MAX_POSTS){ alert(MAX_POSTS+' posts per platform is the cap — keeps the review page light.'); return; }
+  s.posts.push(newPost());
+  s.cur = s.posts.length - 1;
+  refreshCard(id); saveSoon();
+}
+function selectPost(id, i){
+  var s = state.p[id];
+  s.cur = Math.max(0, Math.min(s.posts.length - 1, i));
+  refreshCard(id); saveSoon();
+}
+function removeCurPost(id){
+  var s = state.p[id];
+  if(s.posts.length < 2) return;
+  var d = curPost(id), label = PLATFORMS.filter(function(p){return p.id===id;})[0].label;
+  if((d.copy.trim() || d.img) && !confirm('Remove post '+(s.cur+1)+' from '+label+' — its copy and image?')) return;
+  s.posts.splice(s.cur, 1);
+  s.cur = Math.min(s.cur, s.posts.length - 1);
+  refreshCard(id); saveSoon();
 }
 
 /* ===================== persistence ===================== */
@@ -660,7 +774,7 @@ function save(){
   catch(e){
     try {
       var lite = JSON.parse(JSON.stringify(state));
-      PLATFORMS.forEach(function(p){ lite.p[p.id].img = null; lite.p[p.id].note = ''; });
+      PLATFORMS.forEach(function(p){ lite.p[p.id].posts.forEach(function(po){ po.img = null; po.note = ''; }); });
       localStorage.setItem(STORE_KEY, JSON.stringify(lite));
     } catch(e2){}
   }
@@ -672,10 +786,18 @@ function load(){
     var s = JSON.parse(raw);
     ['campaign','account','handle','gh','repo','asana','relay'].forEach(function(k){ if(typeof s[k]==='string') state[k]=s[k]; });
     PLATFORMS.forEach(function(p){
-      if(s.p && s.p[p.id]){
-        state.p[p.id].copy = s.p[p.id].copy || '';
-        state.p[p.id].img  = s.p[p.id].img  || null;
-        state.p[p.id].note = s.p[p.id].note || '';
+      var sp = s.p && s.p[p.id];
+      if(!sp) return;
+      var t = state.p[p.id];
+      if(Array.isArray(sp.posts)){
+        t.posts = sp.posts.map(function(po){ return {copy:po.copy||'', img:po.img||null, note:po.note||''}; });
+        if(!t.posts.length) t.posts = [newPost()];
+        t.on = sp.on !== false;
+        t.cur = Math.max(0, Math.min(t.posts.length-1, sp.cur|0));
+      } else {
+        /* migrate a one-post-per-platform draft from the previous version */
+        t.posts = [{copy:sp.copy||'', img:sp.img||null, note:sp.note||''}];
+        t.on = true; t.cur = 0;
       }
     });
   } catch(e){}
@@ -685,11 +807,42 @@ function load(){
 function bake(){
   var slug = slugify(state.campaign);
   var url = 'https://'+state.gh+'.github.io/'+state.repo+'/reviews/'+slug+'.html';
-  var mocks = PLATFORMS.map(function(p){
-    return '<div class="slot"><div class="slot-tag">'+p.label+'</div>'+mock(p.id)+'</div>';
+  var enabled = PLATFORMS.filter(function(p){ return state.p[p.id].on; });
+  var total = 0, anyMulti = false;
+  enabled.forEach(function(p){ var n = state.p[p.id].posts.length; total += n; if(n>1) anyMulti = true; });
+
+  var mocks = enabled.map(function(p){
+    var posts = state.p[p.id].posts, inner;
+    if(posts.length === 1){
+      inner = mock(p.id, posts[0]);
+    } else {
+      var items = posts.map(function(po){ return '<div class="car-item">'+mock(p.id, po)+'</div>'; }).join('');
+      var dots = posts.map(function(po, i){ return '<span class="dot'+(i===0?' on':'')+'"></span>'; }).join('');
+      inner = '<div class="car">'+
+        '<div class="car-track">'+items+'</div>'+
+        '<div class="car-bar">'+
+          '<button class="car-btn prev" type="button" aria-label="Previous post">&lsaquo;</button>'+
+          '<div class="car-dots">'+dots+'</div>'+
+          '<button class="car-btn next" type="button" aria-label="Next post">&rsaquo;</button>'+
+          '<span class="car-count">1 / '+posts.length+'</span>'+
+        '</div></div>';
+    }
+    var tag = p.label + (posts.length>1 ? ' <em>&middot; '+posts.length+' posts</em>' : '');
+    return '<div class="slot"><div class="slot-tag">'+tag+'</div>'+inner+'</div>';
   }).join('\n');
+
+  var intro;
+  if(total === 1){
+    intro = 'One post is below, shown as it will appear live on '+enabled[0].label+'. Look it over, then decide at the bottom.';
+  } else if(enabled.length === 1){
+    intro = total+' posts for '+enabled[0].label+' are below, shown as they will appear live.'+(anyMulti?' Use the arrows (or swipe) to flip through them.':'')+' Then decide at the bottom.';
+  } else {
+    intro = total+' posts across '+enabled.length+' platforms are below, shown as they will appear live.'+(anyMulti?' Use the arrows (or swipe) where a platform has more than one.':'')+' Then decide at the bottom.';
+  }
+  var approveLabel = total === 1 ? 'Approve this post' : 'Approve all '+total;
+
   var payload = {
-    v:2, campaign: state.campaign, slug: slug, url: url,
+    v:3, campaign: state.campaign, slug: slug, url: url,
     task: parseTask(state.asana), relay: state.relay.trim(),
     createdAt: new Date().toISOString()
   };
@@ -701,10 +854,12 @@ function bake(){
     ['__CAMPAIGN__', esc(state.campaign)],
     ['__DATE__', esc(dateStr)],
     ['__AVATAR__', AVATAR],
+    ['__INTRO__', intro],
+    ['__APPROVE_LABEL__', approveLabel],
     ['<!--__MOCKUPS__-->', mocks],
     ['__PAYLOAD__', json]
   ].forEach(function(pair){ html = html.split(pair[0]).join(pair[1]); });
-  return { slug: slug, filename: slug+'.html', url: url, html: html };
+  return { slug: slug, filename: slug+'.html', url: url, html: html, total: total, platforms: enabled.length };
 }
 
 /* ===================== generate flow ===================== */
@@ -726,8 +881,18 @@ function generate(){
     q('#relay').focus();
     return;
   }
-  var missing = PLATFORMS.filter(function(p){ return !state.p[p.id].img || !state.p[p.id].copy.trim(); })
-    .map(function(p){ return p.label; });
+  var enabledP = PLATFORMS.filter(function(p){ return state.p[p.id].on; });
+  if(!enabledP.length){
+    alert('Every platform is switched off — turn on at least one card to generate a review.');
+    return;
+  }
+  var missing = [];
+  enabledP.forEach(function(p){
+    var posts = state.p[p.id].posts;
+    posts.forEach(function(po, i){
+      if(!po.img || !po.copy.trim()) missing.push(p.label + (posts.length>1 ? ' · post '+(i+1) : ''));
+    });
+  });
   if(missing.length && !confirm('Still missing copy or an image for: '+missing.join(', ')+'.\nGenerate anyway?')) return;
 
   var b = bake();
@@ -794,10 +959,14 @@ function bind(){
   /* per-platform */
   PLATFORMS.forEach(function(p){
     var ta = q('#ta-'+p.id);
-    ta.value = state.p[p.id].copy;
     ta.addEventListener('input', function(){
-      state.p[p.id].copy = ta.value;
+      curPost(p.id).copy = ta.value;
       renderPreview(p.id); updateCount(); saveSoon();
+    });
+    q('#on-'+p.id).addEventListener('change', function(e){
+      state.p[p.id].on = e.target.checked;
+      q('#card-'+p.id).classList.toggle('off', !e.target.checked);
+      saveSoon();
     });
     var fi = q('#fi-'+p.id), dz = q('#dz-'+p.id);
     fi.addEventListener('change', function(){ if(fi.files[0]) processFile(p.id, fi.files[0]); fi.value=''; });
@@ -811,7 +980,7 @@ function bind(){
       var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
       if(f) processFile(p.id, f);
     });
-    updateImgRow(p.id);
+    refreshCard(p.id);
   });
 
   /* delegated mini buttons */
@@ -819,23 +988,29 @@ function bind(){
     var b = e.target.closest('[data-act]'); if(!b) return;
     var id = b.getAttribute('data-p'), act = b.getAttribute('data-act');
     if(act==='rm') removeImage(id);
+    if(act==='seltab') selectPost(id, parseInt(b.getAttribute('data-i'), 10) || 0);
+    if(act==='addpost') addPost(id);
+    if(act==='rmpost') removeCurPost(id);
     if(act==='copyall'){
-      PLATFORMS.forEach(function(p){ state.p[p.id].copy = state.p[id].copy; q('#ta-'+p.id).value = state.p[id].copy; });
+      var srcCopy = curPost(id).copy;
+      PLATFORMS.forEach(function(p){ curPost(p.id).copy = srcCopy; q('#ta-'+p.id).value = srcCopy; });
       renderAll(); saveSoon();
     }
     if(act==='imgall'){
-      if(!state.p[id].img) return;
-      PLATFORMS.forEach(function(p){ state.p[p.id].img = state.p[id].img; state.p[p.id].note = state.p[id].note; updateImgRow(p.id); });
+      var src = curPost(id);
+      if(!src.img) return;
+      PLATFORMS.forEach(function(p){ var d = curPost(p.id); d.img = src.img; d.note = src.note; updateImgRow(p.id); });
       renderAll(); saveSoon();
     }
   });
 
   q('#generate').addEventListener('click', generate);
   q('#clear').addEventListener('click', function(){
-    if(!confirm('Clear the campaign name, Asana task link, all copy and all images?')) return;
-    state.campaign=''; state.asana=''; PLATFORMS.forEach(function(p){ state.p[p.id]={copy:'',img:null,note:''}; });
+    if(!confirm('Clear the campaign name, Asana task link, all posts and all images? (Platform switches and repo settings are kept.)')) return;
+    state.campaign=''; state.asana='';
+    PLATFORMS.forEach(function(p){ state.p[p.id].posts=[newPost()]; state.p[p.id].cur=0; });
     q('#campaign').value=''; q('#asana').value=''; updateAsanaHint();
-    PLATFORMS.forEach(function(p){ q('#ta-'+p.id).value=''; updateImgRow(p.id); });
+    PLATFORMS.forEach(function(p){ refreshCard(p.id); });
     q('#done').classList.remove('show');
     renderAll(); save();
   });
@@ -855,6 +1030,7 @@ else bind();
 
 /* test hooks */
 window.__sa = { state: state, bake: bake, slugify: slugify, parseTask: parseTask, mock: mock, renderAll: renderAll,
+  refreshCard: refreshCard, addPost: addPost, selectPost: selectPost, newPost: newPost,
   MOCKUP_CSS: MOCKUP_CSS, REVIEW_TEMPLATE: REVIEW_TEMPLATE };
 </script>
 </body>
