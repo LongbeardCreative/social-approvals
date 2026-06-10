@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Social Approvals — Longbeard Creative</title>
+<style>
+:root{
+  --bg:#0e0d0b; --panel:#16140f; --panel2:#1c1913; --inset:#0a0908;
+  --line:#2b2720; --line2:#3a3428;
+  --gold:#c49d4d; --gold-bright:#d8b462; --gold-dim:#8a6f37;
+  --text:#ece7dc; --mut:#9b9489; --bad:#c96a4e;
+  --serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;
+  background-image:radial-gradient(1200px 500px at 50% -200px,#191610 0%,var(--bg) 70%)}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 22px 80px}
+a{color:var(--gold)}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- header ---------- */
+header.app{display:flex;align-items:center;gap:16px;padding:6px 0 26px}
+header.app img.mark{width:46px;height:46px;border-radius:10px;border:1px solid var(--line)}
+header.app h1{font-family:var(--serif);font-weight:600;font-size:26px;letter-spacing:.01em;margin:0}
+header.app .sub{color:var(--mut);font-size:13px;margin-top:1px}
+
+/* ---------- setup bar ---------- */
+.bar{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}
+.bar .grid{display:grid;grid-template-columns:2fr 1.2fr 1fr;gap:14px}
+@media (max-width:840px){.bar .grid{grid-template-columns:1fr}}
+.field label{display:block;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0 0 6px 1px}
+input[type=text],textarea{width:100%;background:var(--inset);border:1px solid var(--line2);border-radius:9px;
+  color:var(--text);font-family:inherit;font-size:14.5px;padding:10px 12px}
+input[type=text]:focus,textarea:focus{border-color:var(--gold-dim);outline:none}
+textarea{resize:vertical;min-height:96px;line-height:1.45}
+.barfoot{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:16px}
+.urlprev{font-family:var(--mono);font-size:12px;color:var(--mut);flex:1;min-width:240px;overflow-wrap:anywhere}
+.urlprev b{color:var(--gold);font-weight:600}
+.btn{border:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600}
+.btn-gold{background:var(--gold);color:#171309}
+.btn-gold:hover{background:var(--gold-bright)}
+.btn-ghost{background:transparent;border:1px solid var(--line2);color:var(--mut);font-weight:500}
+.btn-ghost:hover{color:var(--text);border-color:var(--gold-dim)}
+details.repo{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+details.repo summary{cursor:pointer;color:var(--mut);font-size:13px;user-select:none}
+details.repo summary:hover{color:var(--gold)}
+details.repo .grid{margin-top:12px;grid-template-columns:1fr 1fr 1fr}
+.hint{font-size:12px;color:var(--mut);margin-top:6px}
+
+/* ---------- success panel ---------- */
+.done{display:none;background:var(--panel2);border:1px solid var(--gold-dim);border-left:4px solid var(--gold);
+  border-radius:14px;padding:18px 20px;margin-bottom:18px}
+.done.show{display:block}
+.done h2{font-family:var(--serif);font-size:19px;margin:0 0 6px;color:var(--gold-bright)}
+.done p{margin:6px 0;color:var(--text);font-size:14px}
+.done .file{font-family:var(--mono);font-size:13px;background:var(--inset);border:1px solid var(--line2);
+  border-radius:7px;padding:3px 8px;color:var(--gold)}
+.done .linkrow{display:flex;gap:8px;margin:12px 0;align-items:stretch}
+.done .linkrow input{font-family:var(--mono);font-size:12.5px;flex:1}
+.done .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.done .mini-note{color:var(--mut);font-size:12.5px;margin-top:12px}
+
+/* ---------- cards ---------- */
+main.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:20px}
+@media (max-width:500px){main.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.card .head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.card .head .plat{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.card .head .apply{margin-left:auto;display:flex;gap:6px}
+.mini{font-size:11.5px;padding:4px 9px;border-radius:7px;border:1px solid var(--line2);
+  background:transparent;color:var(--mut)}
+.mini:hover{color:var(--gold);border-color:var(--gold-dim)}
+.card .ctrl{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.count{font-size:11.5px;color:var(--mut);text-align:right;margin-top:-6px}
+.count.over{color:var(--bad);font-weight:600}
+.dz{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--line2);border-radius:11px;
+  padding:12px 14px;cursor:pointer;color:var(--mut);transition:border-color .15s,background .15s}
+.dz:hover,.dz.drag{border-color:var(--gold);background:#1a160e;color:var(--text)}
+.dz svg{width:26px;height:26px;flex:none}
+.dz .t strong{display:block;font-size:13.5px;color:var(--text);font-weight:600}
+.dz .t em{font-style:normal;font-size:12px;color:var(--mut)}
+.imgrow{display:none;align-items:center;gap:10px;font-size:12.5px;color:var(--mut)}
+.imgrow.show{display:flex}
+.imgrow img{width:38px;height:47px;object-fit:cover;border-radius:5px;border:1px solid var(--line2)}
+.imgrow .note{flex:1}
+.imgrow .ok{color:var(--gold)}
+.linkbtn{background:none;border:none;color:var(--mut);text-decoration:underline;font-size:12.5px;padding:0}
+.linkbtn:hover{color:var(--bad)}
+.card .pvzone{background:var(--inset);border-top:1px solid var(--line);padding:20px 18px 24px;flex:1}
+.card .pvzone .eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 14px 2px}
+footer.app{margin-top:44px;color:var(--mut);font-size:12.5px;text-align:center}
+
+/* mockup styles are injected at runtime so the editor and baked review pages share one source */
+</style>
+<style id="mockcss"></style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="app">
+  <img class="mark" id="logo" alt="Magisterium AI logo">
+  <div>
+    <h1>Social Approvals</h1>
+    <div class="sub">Longbeard Creative · Magisterium AI asset review builder</div>
+  </div>
+</header>
+
+<section class="bar" aria-label="Campaign setup">
+  <div class="grid">
+    <div class="field">
+      <label for="campaign">Campaign name</label>
+      <input type="text" id="campaign" placeholder="e.g. Pentecost launch — June" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="account">Account name</label>
+      <input type="text" id="account" value="Magisterium AI" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="handle">Handle</label>
+      <input type="text" id="handle" value="magisteriumai" autocomplete="off">
+    </div>
+  </div>
+  <div class="barfoot">
+    <div class="urlprev" id="urlprev"></div>
+    <button class="btn btn-ghost" id="clear" type="button">Clear draft</button>
+    <button class="btn btn-gold" id="generate" type="button">Generate review page</button>
+  </div>
+  <details class="repo">
+    <summary>Repo settings</summary>
+    <div class="grid">
+      <div class="field">
+        <label for="gh">GitHub username</label>
+        <input type="text" id="gh" value="longbeardcreative" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="repo">Repository</label>
+        <input type="text" id="repo" value="social-approvals" autocomplete="off">
+      </div>
+    </div>
+    <p class="hint">Used only to build the share link and open the right GitHub upload page. Nothing is sent anywhere from this editor.</p>
+  </details>
+</section>
+
+<section class="done" id="done" aria-live="polite">
+  <h2>Review page generated</h2>
+  <p><span class="file" id="d-file"></span> has downloaded, and a GitHub upload tab should have opened. Drag the file in, commit, and the page goes live about a minute later.</p>
+  <div class="linkrow">
+    <input type="text" id="d-url" readonly aria-label="Share link">
+    <button class="btn btn-ghost" id="d-copy" type="button">Copy link</button>
+  </div>
+  <div class="acts">
+    <button class="btn btn-ghost" id="d-upload" type="button">Open GitHub upload page</button>
+    <button class="btn btn-ghost" id="d-preview" type="button">Preview the review page</button>
+  </div>
+  <p class="mini-note" id="d-note"></p>
+</section>
+
+<main class="grid" id="cards"></main>
+
+<footer class="app">Self-contained editor · your work autosaves in this browser · nothing leaves this page until you commit the generated file</footer>
+</div>
+
+<script>
+'use strict';
+
+/* ===================== constants ===================== */
+var WEB3FORMS_KEY = 'e9a274a7-dc47-4a75-9444-c410c6168f54';
+var AVATAR = 'data:image/jpeg;base64,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';
+var PLATFORMS = [
+  {id:'x',  label:'X (Twitter)'},
+  {id:'ig', label:'Instagram'},
+  {id:'fb', label:'Facebook'},
+  {id:'li', label:'LinkedIn'}
+];
+var STORE_KEY = 'sa-draft-v1';
+
+/* ===================== shared mockup CSS =====================
+   Single source of truth: injected into this editor AND baked into
+   every review page, so the boss sees exactly what you see. */
+var MOCKUP_CSS = [
+'.slot{margin:0 auto 36px;max-width:480px}',
+'.slot:last-child{margin-bottom:0}',
+'.slot-tag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#c49d4d;font-weight:600;margin:0 2px 10px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}',
+'.mk{background:#fff;text-align:left;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto}',
+'.mk,.mk *{box-sizing:border-box}',
+'.mk p,.mk div{margin:0}',
+'.mk img{display:block}',
+'.mk .av{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none}',
+'.mk .ico{width:18px;height:18px;display:block}',
+'.mk .ico.sm{width:12px;height:12px}',
+'.mk .txt{white-space:normal;overflow-wrap:break-word}',
+'.mk .mut{color:#98a2ad;font-style:italic}',
+'.mk .ph{position:relative;overflow:hidden}',
+'.mk .ph img{width:100%;aspect-ratio:4/5;object-fit:cover}',
+'.mk .ph-empty{width:100%;aspect-ratio:4/5;background:#f3f1ec;color:#9a948a;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;font-size:13px}',
+'.mk .ph-empty .ico{width:26px;height:26px}',
+'.mk .dots{margin-left:auto;flex:none}',
+/* X */
+'.mk-x{border:1px solid #e1e8ed;border-radius:16px;padding:12px 16px;color:#0f1419}',
+'.mk-x .row{display:flex;gap:10px}',
+'.mk-x .body{flex:1;min-width:0}',
+'.mk-x .hd{display:flex;align-items:center;gap:5px;font-size:15px;flex-wrap:wrap}',
+'.mk-x .nm{font-weight:700;color:#0f1419}',
+'.mk-x .meta{color:#536471}',
+'.mk-x .txt{font-size:15px;line-height:1.4;color:#0f1419;margin-top:2px}',
+'.mk-x .ph{margin-top:12px;border-radius:16px;border:1px solid #e1e8ed}',
+'.mk-x .acts{display:flex;justify-content:space-between;max-width:330px;margin-top:11px;color:#536471;font-size:13px}',
+'.mk-x .act{display:flex;align-items:center;gap:6px}',
+/* Instagram */
+'.mk-ig{border:1px solid #dbdbdb;border-radius:8px;color:#262626}',
+'.mk-ig .hd{display:flex;align-items:center;gap:10px;padding:11px 13px}',
+'.mk-ig .hd .av{width:32px;height:32px}',
+'.mk-ig .un{font-weight:600;font-size:14px}',
+'.mk-ig .acts{display:flex;gap:15px;padding:11px 13px 7px;color:#262626}',
+'.mk-ig .acts .sp{margin-left:auto}',
+'.mk-ig .acts .ico{width:22px;height:22px}',
+'.mk-ig .likes{padding:0 13px;font-weight:600;font-size:14px}',
+'.mk-ig .cap{padding:5px 13px 0;font-size:14px;line-height:1.45}',
+'.mk-ig .cap .un{margin-right:5px}',
+'.mk-ig .time{padding:7px 13px 13px;font-size:10px;letter-spacing:.3px;color:#8e8e8e;text-transform:uppercase}',
+/* Facebook */
+'.mk-fb{border:1px solid #dadde1;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.08);color:#050505}',
+'.mk-fb .hd{display:flex;gap:10px;padding:12px 16px 0;align-items:center}',
+'.mk-fb .nm{font-weight:600;font-size:15px}',
+'.mk-fb .sub{font-size:12.5px;color:#65676b;display:flex;align-items:center;gap:4px;margin-top:1px}',
+'.mk-fb .dots{color:#65676b}',
+'.mk-fb .txt{padding:9px 16px 12px;font-size:15px;line-height:1.4}',
+'.mk-fb .stats{display:flex;align-items:center;gap:7px;padding:10px 16px;font-size:14px;color:#65676b}',
+'.mk-fb .emoj{display:flex}',
+'.mk-fb .em{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}',
+'.mk-fb .em svg{width:9px;height:9px}',
+'.mk-fb .em.l{background:#1877f2;color:#fff;z-index:1}',
+'.mk-fb .em.h{background:#f33e58;color:#fff;margin-left:-5px}',
+'.mk-fb .right{margin-left:auto}',
+'.mk-fb .bbar{display:flex;border-top:1px solid #dadde1;margin:0 12px;padding:4px 0 5px}',
+'.mk-fb .bt{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:8px 0;color:#65676b;font-weight:600;font-size:14px}',
+/* LinkedIn */
+'.mk-li{border:1px solid #e0dfdc;border-radius:8px;color:rgba(0,0,0,.9)}',
+'.mk-li .hd{display:flex;gap:10px;padding:13px 16px 0}',
+'.mk-li .av{width:48px;height:48px;border-radius:2px}',
+'.mk-li .nm{font-weight:600;font-size:14px;line-height:1.3}',
+'.mk-li .sub{font-size:12px;color:rgba(0,0,0,.6);line-height:1.35}',
+'.mk-li .sub .in{display:inline-flex;align-items:center;gap:3px;vertical-align:-1px}',
+'.mk-li .dots{color:rgba(0,0,0,.6)}',
+'.mk-li .txt{padding:11px 16px 13px;font-size:14px;line-height:1.5}',
+'.mk-li .stats{display:flex;align-items:center;gap:7px;padding:9px 16px;font-size:12px;color:rgba(0,0,0,.6)}',
+'.mk-li .emoj{display:flex}',
+'.mk-li .em{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}',
+'.mk-li .em svg{width:8px;height:8px}',
+'.mk-li .em.l{background:#378fe9;color:#fff;z-index:1}',
+'.mk-li .em.h{background:#df704d;color:#fff;margin-left:-4px}',
+'.mk-li .right{margin-left:auto}',
+'.mk-li .bbar{display:flex;border-top:1px solid #ebebeb;margin:0 8px;padding:4px 0}',
+'.mk-li .bt{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;color:rgba(0,0,0,.6);font-weight:600;font-size:13px}'
+].join('');
+
+/* ===================== icons ===================== */
+function ico(name, cls){
+  var P = {
+    heart:'<path d="M12 21C12 21 4 14.9 4 9.5 4 6.6 6.4 4.2 9.1 4.2c1.4 0 2.4.7 2.9 1.4.5-.7 1.5-1.4 2.9-1.4 2.7 0 5.1 2.4 5.1 5.3C20 14.9 12 21 12 21z"/>',
+    chat:'<path d="M21 11.6a8.4 8.4 0 0 1-8.5 8.3c-1.5 0-2.9-.4-4.1-1L3 20l1.1-5A8.4 8.4 0 1 1 21 11.6z"/>',
+    repost:'<path d="M17 2l4 4-4 4"/><path d="M21 6H8.5A4.5 4.5 0 0 0 4 10.5V12"/><path d="M7 22l-4-4 4-4"/><path d="M3 18h12.5a4.5 4.5 0 0 0 4.5-4.5V12"/>',
+    shareup:'<path d="M12 15V3"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M4.5 12.5v6a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-6"/>',
+    plane:'<path d="M21.5 2.5 11 13"/><path d="M21.5 2.5 14.7 21l-3.7-8-8-3.7 18.5-6.8z"/>',
+    bookmark:'<path d="M18.5 21l-6.5-4.6L5.5 21V5.4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2V21z"/>',
+    thumb:'<path d="M7.3 10.5 11 3.2a2 2 0 0 1 1.9 2.6L12.2 9h6.3a2 2 0 0 1 2 2.4l-1.5 6.9a2 2 0 0 1-2 1.6H7.3"/><path d="M7.3 10.5H4.5a1.5 1.5 0 0 0-1.5 1.5v6.5a1.5 1.5 0 0 0 1.5 1.5h2.8V10.5z"/>',
+    globe:'<circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2"/><path d="M12 3.4c2.3 2.3 3.6 5.3 3.6 8.6s-1.3 6.3-3.6 8.6c-2.3-2.3-3.6-5.3-3.6-8.6S9.7 5.7 12 3.4z"/>',
+    img:'<rect x="3" y="5" width="18" height="14" rx="2.2"/><circle cx="8.6" cy="9.7" r="1.5"/><path d="M21 15.5 15.8 10 5.5 19"/>'
+  };
+  return '<svg class="ico'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+P[name]+'</svg>';
+}
+function icoFill(name){
+  var P = {
+    thumb:'<path d="M7.3 10.5 11 3.2a2 2 0 0 1 1.9 2.6L12.2 9h6.3a2 2 0 0 1 2 2.4l-1.5 6.9a2 2 0 0 1-2 1.6H7.3zM5.8 10.5H4.5A1.5 1.5 0 0 0 3 12v6.5A1.5 1.5 0 0 0 4.5 20h1.3z"/>',
+    heart:'<path d="M12 20.5C12 20.5 3.5 14.6 3.5 9.3 3.5 6.4 5.9 4 8.6 4c1.5 0 2.8.8 3.4 1.6C12.6 4.8 13.9 4 15.4 4c2.7 0 5.1 2.4 5.1 5.3 0 5.3-8.5 11.2-8.5 11.2z"/>',
+    dots:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'
+  };
+  return '<svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'+P[name]+'</svg>';
+}
+
+/* ===================== state ===================== */
+var state = {
+  campaign:'', account:'Magisterium AI', handle:'magisteriumai',
+  gh:'longbeardcreative', repo:'social-approvals',
+  p:{
+    x:{copy:'',img:null,note:''},
+    ig:{copy:'',img:null,note:''},
+    fb:{copy:'',img:null,note:''},
+    li:{copy:'',img:null,note:''}
+  }
+};
+
+/* ===================== helpers ===================== */
+function q(s){ return document.querySelector(s); }
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(m){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+  });
+}
+function nl2br(s){ return s.replace(/\n/g,'<br>'); }
+function slugify(s){
+  var t = String(s).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  return t || 'review';
+}
+function fitText(copy, mutMsg){
+  var t = (copy||'').trim();
+  if(!t) return '<div class="txt mut">'+mutMsg+'</div>';
+  return '<div class="txt">'+nl2br(esc(t))+'</div>';
+}
+function imgBlock(img){
+  if(img) return '<div class="ph"><img src="'+img+'" alt="Post image"></div>';
+  return '<div class="ph"><div class="ph-empty">'+ico('img')+'<span>1080 &times; 1350 image</span></div></div>';
+}
+
+/* ===================== mockup builders ===================== */
+function mock(id){
+  var d = state.p[id], A = esc(state.account), H = esc(state.handle);
+  if(id === 'x'){
+    return '<div class="mk mk-x"><div class="row">'+
+      '<img class="av" src="'+AVATAR+'" alt="">'+
+      '<div class="body">'+
+        '<div class="hd"><span class="nm">'+A+'</span><span class="meta">@'+H+' &middot; 2h</span></div>'+
+        fitText(d.copy,'Post copy will appear here&hellip;')+
+        imgBlock(d.img)+
+        '<div class="acts">'+
+          '<span class="act">'+ico('chat')+'18</span>'+
+          '<span class="act">'+ico('repost')+'42</span>'+
+          '<span class="act">'+ico('heart')+'312</span>'+
+          '<span class="act">'+ico('shareup')+'</span>'+
+        '</div>'+
+      '</div></div></div>';
+  }
+  if(id === 'ig'){
+    return '<div class="mk mk-ig">'+
+      '<div class="hd"><img class="av" src="'+AVATAR+'" alt=""><span class="un">'+H+'</span><span class="dots">'+icoFill('dots')+'</span></div>'+
+      imgBlock(d.img)+
+      '<div class="acts">'+ico('heart')+ico('chat')+ico('plane')+'<span class="sp">'+ico('bookmark')+'</span></div>'+
+      '<div class="likes">1,247 likes</div>'+
+      '<div class="cap"><span class="un">'+H+'</span>'+(d.copy.trim()? nl2br(esc(d.copy.trim())) : '<span class="mut">Caption will appear here&hellip;</span>')+'</div>'+
+      '<div class="time">2 hours ago</div>'+
+    '</div>';
+  }
+  if(id === 'fb'){
+    return '<div class="mk mk-fb">'+
+      '<div class="hd"><img class="av" src="'+AVATAR+'" alt="">'+
+        '<div><div class="nm">'+A+'</div><div class="sub">Just now &middot; '+ico('globe','sm')+'</div></div>'+
+        '<span class="dots">'+icoFill('dots')+'</span></div>'+
+      fitText(d.copy,'Post copy will appear here&hellip;')+
+      imgBlock(d.img)+
+      '<div class="stats"><span class="emoj"><span class="em l">'+icoFill('thumb')+'</span><span class="em h">'+icoFill('heart')+'</span></span>96<span class="right">11 comments &middot; 7 shares</span></div>'+
+      '<div class="bbar">'+
+        '<span class="bt">'+ico('thumb')+'Like</span>'+
+        '<span class="bt">'+ico('chat')+'Comment</span>'+
+        '<span class="bt">'+ico('shareup')+'Share</span>'+
+      '</div></div>';
+  }
+  /* linkedin */
+  return '<div class="mk mk-li">'+
+    '<div class="hd"><img class="av" src="'+AVATAR+'" alt="">'+
+      '<div><div class="nm">'+A+'</div><div class="sub">12,406 followers</div><div class="sub"><span class="in">2h &middot; '+ico('globe','sm')+'</span></div></div>'+
+      '<span class="dots">'+icoFill('dots')+'</span></div>'+
+    fitText(d.copy,'Post copy will appear here&hellip;')+
+    imgBlock(d.img)+
+    '<div class="stats"><span class="emoj"><span class="em l">'+icoFill('thumb')+'</span><span class="em h">'+icoFill('heart')+'</span></span>88<span class="right">14 comments &middot; 6 reposts</span></div>'+
+    '<div class="bbar">'+
+      '<span class="bt">'+ico('thumb')+'Like</span>'+
+      '<span class="bt">'+ico('chat')+'Comment</span>'+
+      '<span class="bt">'+ico('repost')+'Repost</span>'+
+      '<span class="bt">'+ico('plane')+'Send</span>'+
+    '</div></div>';
+}
+
+/* ===================== review page template =====================
+   Markers replaced at bake time. The inline script below is written
+   without backticks, template interpolation, or backslash escapes so
+   it survives living inside this template string. */
+var REVIEW_TEMPLATE = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>__CAMPAIGN__ — asset review</title>
+<style>
+:root{--bg:#0e0d0b;--panel:#16140f;--inset:#0a0908;--line:#2b2720;--line2:#3a3428;
+--gold:#c49d4d;--gold-bright:#d8b462;--gold-dim:#8a6f37;--text:#ece7dc;--mut:#9b9489;--bad:#c96a4e;
+--serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+--sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;
+background-image:radial-gradient(1100px 460px at 50% -180px,#191610 0%,var(--bg) 70%)}
+.wrap{max-width:620px;margin:0 auto;padding:34px 20px 70px}
+header{display:flex;align-items:center;gap:16px;margin-bottom:34px}
+header img{width:48px;height:48px;border-radius:10px;border:1px solid var(--line)}
+header h1{font-family:var(--serif);font-weight:600;font-size:25px;margin:0;letter-spacing:.01em}
+header p{margin:2px 0 0;color:var(--mut);font-size:13px}
+.note{color:var(--mut);font-size:13.5px;margin:0 0 26px;border-left:3px solid var(--gold-dim);padding-left:12px}
+.decide{background:var(--panel);border:1px solid var(--gold-dim);border-radius:16px;padding:24px;margin-top:42px}
+.decide h2{font-family:var(--serif);font-size:20px;margin:0 0 6px;color:var(--gold-bright)}
+.decide .sub{color:var(--mut);font-size:13.5px;margin:0 0 18px}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+button{font-family:inherit;cursor:pointer;border-radius:10px;font-size:15px;font-weight:600;padding:13px 24px}
+button:disabled{opacity:.55;cursor:wait}
+.b-gold{background:var(--gold);border:1px solid var(--gold);color:#171309}
+.b-gold:hover{background:var(--gold-bright)}
+.b-line{background:transparent;border:1px solid var(--line2);color:var(--text)}
+.b-line:hover{border-color:var(--gold-dim);color:var(--gold-bright)}
+.b-ghost{background:none;border:none;color:var(--mut);text-decoration:underline;font-weight:500;padding:13px 8px}
+#revbox{margin-top:16px}
+#revbox[hidden]{display:none}
+textarea{width:100%;min-height:110px;background:var(--inset);border:1px solid var(--line2);border-radius:10px;
+color:var(--text);font-family:inherit;font-size:14.5px;padding:12px;resize:vertical;line-height:1.5}
+textarea:focus{border-color:var(--gold-dim);outline:none}
+#revbox .row{display:flex;gap:10px;margin-top:12px;align-items:center}
+.msg{margin-top:16px;border-radius:10px;padding:14px 16px;font-size:14.5px}
+.msg[hidden]{display:none}
+#ok{background:#191610;border:1px solid var(--gold-dim);color:var(--gold-bright);font-weight:600}
+#err{background:#1c120e;border:1px solid #5a382c;color:#e0a18b}
+#err a{color:var(--gold-bright)}
+footer{margin-top:38px;color:var(--mut);font-size:12px;text-align:center}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/*__MOCKUP_CSS__*/
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img src="__AVATAR__" alt="Magisterium AI logo">
+  <div>
+    <h1>__CAMPAIGN__</h1>
+    <p>Social asset review &middot; __DATE__ &middot; Magisterium AI</p>
+  </div>
+</header>
+<p class="note">Four posts are below, shown as they will appear on each platform. Scroll through, then choose at the bottom.</p>
+<main><!--__MOCKUPS__--></main>
+<section class="decide" id="decide">
+  <h2>Your decision</h2>
+  <p class="sub">One decision covers the whole set. Johan is notified automatically either way.</p>
+  <div class="btns" id="btns">
+    <button class="b-gold" id="approve" type="button">Approve all four</button>
+    <button class="b-line" id="revise" type="button">Revisions needed</button>
+  </div>
+  <div id="revbox" hidden>
+    <textarea id="fbx" placeholder="Paste a Loom link, or describe the changes needed&hellip;"></textarea>
+    <div class="row">
+      <button class="b-gold" id="send" type="button">Send feedback</button>
+      <button class="b-ghost" id="back" type="button">Back</button>
+    </div>
+  </div>
+  <div class="msg" id="ok" hidden role="status"></div>
+  <div class="msg" id="err" hidden role="alert"></div>
+</section>
+<footer>Prepared with Longbeard Creative &middot; this page notifies Johan automatically</footer>
+</div>
+<script type="application/json" id="payload">__PAYLOAD__<\/script>
+<script>
+(function(){
+  var P;
+  try { P = JSON.parse(document.getElementById('payload').textContent); } catch(e){ return; }
+  var sent = false;
+  function el(id){ return document.getElementById(id); }
+  var bA = el('approve'), bR = el('revise'), bS = el('send'), bB = el('back');
+  var btns = el('btns'), revbox = el('revbox'), fbx = el('fbx'), ok = el('ok'), err = el('err');
+  function busy(on){ bA.disabled = on; bR.disabled = on; bS.disabled = on; }
+  function mailFallback(decision, notes){
+    var addr = ['johan','longbeard.com'].join('@');
+    var s = encodeURIComponent(decision + ': ' + P.campaign);
+    var b = encodeURIComponent('Decision: ' + decision + ' | Feedback: ' + (notes || '-') + ' | Review page: ' + P.url);
+    return 'mailto:' + addr + '?subject=' + s + '&body=' + b;
+  }
+  function fail(decision, notes){
+    busy(false);
+    err.innerHTML = 'The notification could not be sent from here (network blocked?). ' +
+      '<a href="' + mailFallback(decision, notes) + '">Email Johan directly</a> &mdash; the draft is prefilled with your decision.';
+    err.hidden = false;
+  }
+  function submit(decision, notes){
+    if (sent) return;
+    busy(true); err.hidden = true;
+    var clean = (notes || '').trim();
+    var data = {
+      access_key: P.key,
+      subject: (decision === 'Approved' ? 'Approved: ' : 'Revisions requested: ') + P.campaign,
+      from_name: 'Longbeard asset review',
+      botcheck: '',
+      campaign: P.campaign,
+      decision: decision,
+      feedback: clean || '-',
+      review_link: P.url,
+      submitted: new Date().toString()
+    };
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function(r){ return r.json(); }).then(function(j){
+      if (j && j.success){
+        sent = true;
+        btns.hidden = true; revbox.hidden = true;
+        ok.textContent = decision === 'Approved'
+          ? 'Approved — Johan has been notified. Thank you.'
+          : 'Feedback sent — Johan has been notified. Thank you.';
+        ok.hidden = false;
+      } else { fail(decision, notes); }
+    }).catch(function(){ fail(decision, notes); });
+  }
+  bA.addEventListener('click', function(){ submit('Approved', ''); });
+  bR.addEventListener('click', function(){ btns.hidden = true; revbox.hidden = false; fbx.focus(); });
+  bB.addEventListener('click', function(){ revbox.hidden = true; btns.hidden = false; });
+  bS.addEventListener('click', function(){ submit('Revisions requested', fbx.value); });
+})();
+<\/script>
+</body>
+</html>`;
+
+/* ===================== rendering ===================== */
+function cardHTML(p){
+  return '<section class="card" data-p="'+p.id+'">'+
+    '<div class="head"><span class="plat">'+p.label+'</span>'+
+      '<span class="apply">'+
+        '<button class="mini" type="button" data-act="copyall" data-p="'+p.id+'" title="Use this copy on all four">copy &rarr; all</button>'+
+        '<button class="mini" type="button" data-act="imgall" data-p="'+p.id+'" title="Use this image on all four">image &rarr; all</button>'+
+      '</span></div>'+
+    '<div class="ctrl">'+
+      '<textarea id="ta-'+p.id+'" placeholder="Post copy for '+p.label+'&hellip;" aria-label="Post copy for '+p.label+'"></textarea>'+
+      (p.id==='x' ? '<div class="count" id="cnt-x">0 / 280</div>' : '')+
+      '<label class="dz" id="dz-'+p.id+'">'+
+        '<input type="file" id="fi-'+p.id+'" accept="image/*" hidden>'+
+        ico('img')+
+        '<span class="t"><strong>Add image</strong><em>drag &amp; drop or click &middot; 1080 &times; 1350</em></span>'+
+      '</label>'+
+      '<div class="imgrow" id="ir-'+p.id+'"><img id="th-'+p.id+'" alt=""><span class="note" id="nt-'+p.id+'"></span>'+
+        '<button class="linkbtn" type="button" data-act="rm" data-p="'+p.id+'">Remove</button></div>'+
+    '</div>'+
+    '<div class="pvzone"><p class="eyebrow">Live preview</p><div id="pv-'+p.id+'"></div></div>'+
+  '</section>';
+}
+
+function renderPreview(id){
+  q('#pv-'+id).innerHTML = mock(id);
+}
+function renderAll(){
+  PLATFORMS.forEach(function(p){ renderPreview(p.id); });
+  updateUrlPrev();
+  updateCount();
+}
+function updateUrlPrev(){
+  var slug = slugify(state.campaign || 'campaign-name');
+  q('#urlprev').innerHTML = 'Will publish to&nbsp; https://'+esc(state.gh)+'.github.io/'+esc(state.repo)+'/reviews/<b>'+esc(slug)+'.html</b>';
+}
+function updateCount(){
+  var el = q('#cnt-x'); if(!el) return;
+  var n = state.p.x.copy.length;
+  el.textContent = n+' / 280';
+  el.className = 'count'+(n>280?' over':'');
+}
+function updateImgRow(id){
+  var d = state.p[id], row = q('#ir-'+id), dz = q('#dz-'+id);
+  if(d.img){
+    row.classList.add('show');
+    q('#th-'+id).src = d.img;
+    q('#nt-'+id).innerHTML = d.note;
+    dz.querySelector('.t strong').textContent = 'Replace image';
+  } else {
+    row.classList.remove('show');
+    q('#th-'+id).removeAttribute('src');
+    dz.querySelector('.t strong').textContent = 'Add image';
+  }
+}
+
+/* ===================== image pipeline ===================== */
+var TW = 1080, TH = 1350;
+function processFile(id, file){
+  if(!file || !/^image\//.test(file.type)){ alert('That file is not an image.'); return; }
+  var url = URL.createObjectURL(file);
+  var im = new Image();
+  im.onload = function(){
+    try{
+      var c = document.createElement('canvas');
+      c.width = TW; c.height = TH;
+      var ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,TW,TH);
+      var s = Math.max(TW/im.naturalWidth, TH/im.naturalHeight);
+      var w = im.naturalWidth*s, h = im.naturalHeight*s;
+      ctx.drawImage(im, (TW-w)/2, (TH-h)/2, w, h);
+      var data = c.toDataURL('image/jpeg', 0.85);
+      var ratio = im.naturalWidth/im.naturalHeight, target = TW/TH;
+      var note;
+      if(Math.abs(ratio-target) > 0.012){
+        note = '<span>Cropped to 4:5 from '+im.naturalWidth+' &times; '+im.naturalHeight+'</span>';
+      } else if(im.naturalWidth < TW){
+        note = '<span>Upscaled from '+im.naturalWidth+' &times; '+im.naturalHeight+' &mdash; final asset should be 1080 &times; 1350</span>';
+      } else {
+        note = '<span class="ok">1080 &times; 1350 &#10003;</span>';
+      }
+      setImage(id, data, note);
+    } catch(e){ alert('Could not read that image: '+e.message); }
+    URL.revokeObjectURL(url);
+  };
+  im.onerror = function(){ alert('Could not load that image file.'); URL.revokeObjectURL(url); };
+  im.src = url;
+}
+function setImage(id, dataUri, note){
+  state.p[id].img = dataUri;
+  state.p[id].note = note || '';
+  updateImgRow(id);
+  renderPreview(id);
+  saveSoon();
+}
+function removeImage(id){
+  state.p[id].img = null; state.p[id].note = '';
+  updateImgRow(id); renderPreview(id); saveSoon();
+}
+
+/* ===================== persistence ===================== */
+var saveTimer = null;
+function saveSoon(){ clearTimeout(saveTimer); saveTimer = setTimeout(save, 350); }
+function save(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch(e){
+    try {
+      var lite = JSON.parse(JSON.stringify(state));
+      PLATFORMS.forEach(function(p){ lite.p[p.id].img = null; lite.p[p.id].note = ''; });
+      localStorage.setItem(STORE_KEY, JSON.stringify(lite));
+    } catch(e2){}
+  }
+}
+function load(){
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return;
+    var s = JSON.parse(raw);
+    ['campaign','account','handle','gh','repo'].forEach(function(k){ if(typeof s[k]==='string') state[k]=s[k]; });
+    PLATFORMS.forEach(function(p){
+      if(s.p && s.p[p.id]){
+        state.p[p.id].copy = s.p[p.id].copy || '';
+        state.p[p.id].img  = s.p[p.id].img  || null;
+        state.p[p.id].note = s.p[p.id].note || '';
+      }
+    });
+  } catch(e){}
+}
+
+/* ===================== bake ===================== */
+function bake(){
+  var slug = slugify(state.campaign);
+  var url = 'https://'+state.gh+'.github.io/'+state.repo+'/reviews/'+slug+'.html';
+  var mocks = PLATFORMS.map(function(p){
+    return '<div class="slot"><div class="slot-tag">'+p.label+'</div>'+mock(p.id)+'</div>';
+  }).join('\n');
+  var payload = {
+    v:1, campaign: state.campaign, slug: slug, url: url,
+    key: WEB3FORMS_KEY, createdAt: new Date().toISOString()
+  };
+  var json = JSON.stringify(payload).split('<').join('\\u003c');
+  var dateStr = new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+  var html = REVIEW_TEMPLATE;
+  [
+    ['/*__MOCKUP_CSS__*/', MOCKUP_CSS],
+    ['__CAMPAIGN__', esc(state.campaign)],
+    ['__DATE__', esc(dateStr)],
+    ['__AVATAR__', AVATAR],
+    ['<!--__MOCKUPS__-->', mocks],
+    ['__PAYLOAD__', json]
+  ].forEach(function(pair){ html = html.split(pair[0]).join(pair[1]); });
+  return { slug: slug, filename: slug+'.html', url: url, html: html };
+}
+
+/* ===================== generate flow ===================== */
+var lastBlobUrl = null;
+function generate(){
+  if(!state.campaign.trim()){
+    alert('Give the campaign a name first — it becomes the file name and share link.');
+    q('#campaign').focus();
+    return;
+  }
+  var missing = PLATFORMS.filter(function(p){ return !state.p[p.id].img || !state.p[p.id].copy.trim(); })
+    .map(function(p){ return p.label; });
+  if(missing.length && !confirm('Still missing copy or an image for: '+missing.join(', ')+'.\nGenerate anyway?')) return;
+
+  var b = bake();
+
+  /* download */
+  var blob = new Blob([b.html], {type:'text/html'});
+  if(lastBlobUrl){ try{ URL.revokeObjectURL(lastBlobUrl); }catch(e){} }
+  lastBlobUrl = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = lastBlobUrl; a.download = b.filename;
+  document.body.appendChild(a); a.click(); a.remove();
+
+  /* clipboard */
+  copyText(b.url, function(okc){
+    q('#d-note').textContent = okc
+      ? 'The share link is already on your clipboard. Send it once the commit is in.'
+      : 'Copy the share link above, then send it once the commit is in.';
+  });
+
+  /* open upload tab */
+  var up = 'https://github.com/'+state.gh+'/'+state.repo+'/upload/main/reviews';
+  try { window.open(up, '_blank', 'noopener'); } catch(e){}
+
+  /* success panel */
+  q('#d-file').textContent = b.filename;
+  q('#d-url').value = b.url;
+  q('#d-upload').onclick = function(){ window.open(up, '_blank', 'noopener'); };
+  q('#d-preview').onclick = function(){ window.open(lastBlobUrl, '_blank', 'noopener'); };
+  var panel = q('#done');
+  panel.classList.add('show');
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function copyText(t, cb){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ cb(true); }, function(){ cb(legacyCopy(t)); });
+  } else cb(legacyCopy(t));
+}
+function legacyCopy(t){
+  try{
+    var ta = document.createElement('textarea');
+    ta.value = t; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    var ok = document.execCommand('copy');
+    ta.remove(); return ok;
+  } catch(e){ return false; }
+}
+
+/* ===================== init ===================== */
+function bind(){
+  q('#logo').src = AVATAR;
+  q('#cards').innerHTML = PLATFORMS.map(cardHTML).join('');
+
+  load();
+
+  /* globals */
+  [['campaign','campaign'],['account','account'],['handle','handle'],['gh','gh'],['repo','repo']].forEach(function(p){
+    var el = q('#'+p[0]);
+    el.value = state[p[1]];
+    el.addEventListener('input', function(){ state[p[1]] = el.value; renderAll(); saveSoon(); });
+  });
+
+  /* per-platform */
+  PLATFORMS.forEach(function(p){
+    var ta = q('#ta-'+p.id);
+    ta.value = state.p[p.id].copy;
+    ta.addEventListener('input', function(){
+      state.p[p.id].copy = ta.value;
+      renderPreview(p.id); updateCount(); saveSoon();
+    });
+    var fi = q('#fi-'+p.id), dz = q('#dz-'+p.id);
+    fi.addEventListener('change', function(){ if(fi.files[0]) processFile(p.id, fi.files[0]); fi.value=''; });
+    ['dragover','dragenter'].forEach(function(ev){
+      dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add('drag'); });
+    });
+    ['dragleave','dragend','drop'].forEach(function(ev){
+      dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove('drag'); });
+    });
+    dz.addEventListener('drop', function(e){
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if(f) processFile(p.id, f);
+    });
+    updateImgRow(p.id);
+  });
+
+  /* delegated mini buttons */
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-act]'); if(!b) return;
+    var id = b.getAttribute('data-p'), act = b.getAttribute('data-act');
+    if(act==='rm') removeImage(id);
+    if(act==='copyall'){
+      PLATFORMS.forEach(function(p){ state.p[p.id].copy = state.p[id].copy; q('#ta-'+p.id).value = state.p[id].copy; });
+      renderAll(); saveSoon();
+    }
+    if(act==='imgall'){
+      if(!state.p[id].img) return;
+      PLATFORMS.forEach(function(p){ state.p[p.id].img = state.p[id].img; state.p[p.id].note = state.p[id].note; updateImgRow(p.id); });
+      renderAll(); saveSoon();
+    }
+  });
+
+  q('#generate').addEventListener('click', generate);
+  q('#clear').addEventListener('click', function(){
+    if(!confirm('Clear the campaign name, all copy and all images?')) return;
+    state.campaign=''; PLATFORMS.forEach(function(p){ state.p[p.id]={copy:'',img:null,note:''}; });
+    q('#campaign').value='';
+    PLATFORMS.forEach(function(p){ q('#ta-'+p.id).value=''; updateImgRow(p.id); });
+    q('#done').classList.remove('show');
+    renderAll(); save();
+  });
+  q('#d-copy').addEventListener('click', function(){
+    copyText(q('#d-url').value, function(okc){ q('#d-copy').textContent = okc ? 'Copied' : 'Copy failed'; 
+      setTimeout(function(){ q('#d-copy').textContent='Copy link'; }, 1600); });
+  });
+
+  /* inject shared mockup css */
+  document.getElementById('mockcss').textContent = MOCKUP_CSS;
+
+  renderAll();
+}
+
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+else bind();
+
+/* test hooks */
+window.__sa = { state: state, bake: bake, slugify: slugify, mock: mock, renderAll: renderAll,
+  MOCKUP_CSS: MOCKUP_CSS, REVIEW_TEMPLATE: REVIEW_TEMPLATE };
+</script>
+</body>
+</html>
