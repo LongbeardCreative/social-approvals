@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "@/styles/mockup.css";
 
 export const metadata: Metadata = {
   title: "Social Approvals",

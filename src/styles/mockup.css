@@ -1,0 +1,79 @@
+/* Shared mockup CSS — single source of truth for how X/IG/FB/LI posts look.
+   Ported verbatim from legacy/editor.html MOCKUP_CSS (lines 214-288).
+   Used by the editor's live preview AND the public review page. Change here only. */
+
+.slot{margin:0 auto 36px;max-width:480px}
+.slot:last-child{margin-bottom:0}
+.slot-tag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#c49d4d;font-weight:600;margin:0 2px 10px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.slot-tag em{font-style:normal;font-weight:500;color:#9b9489;letter-spacing:.04em}
+.mk{background:#fff;text-align:left;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto}
+.mk,.mk *{box-sizing:border-box}
+.mk p,.mk div{margin:0}
+.mk img{display:block}
+.mk .av{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none}
+.mk .ico{width:18px;height:18px;display:block}
+.mk .ico.sm{width:12px;height:12px}
+.mk .txt{white-space:normal;overflow-wrap:break-word}
+.mk .mut{color:#98a2ad;font-style:italic}
+.mk .ph{position:relative;overflow:hidden}
+.mk .ph img{width:100%;aspect-ratio:4/5;object-fit:cover}
+.mk .ph-empty{width:100%;aspect-ratio:4/5;background:#f3f1ec;color:#9a948a;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;font-size:13px}
+.mk .ph-empty .ico{width:26px;height:26px}
+.mk .dots{margin-left:auto;flex:none}
+/* X */
+.mk-x{border:1px solid #e1e8ed;border-radius:16px;padding:12px 16px;color:#0f1419}
+.mk-x .row{display:flex;gap:10px}
+.mk-x .body{flex:1;min-width:0}
+.mk-x .hd{display:flex;align-items:center;gap:5px;font-size:15px;flex-wrap:wrap}
+.mk-x .nm{font-weight:700;color:#0f1419}
+.mk-x .meta{color:#536471}
+.mk-x .txt{font-size:15px;line-height:1.4;color:#0f1419;margin-top:2px}
+.mk-x .ph{margin-top:12px;border-radius:16px;border:1px solid #e1e8ed}
+.mk-x .acts{display:flex;justify-content:space-between;max-width:330px;margin-top:11px;color:#536471;font-size:13px}
+.mk-x .act{display:flex;align-items:center;gap:6px}
+/* Instagram */
+.mk-ig{border:1px solid #dbdbdb;border-radius:8px;color:#262626}
+.mk-ig .hd{display:flex;align-items:center;gap:10px;padding:11px 13px}
+.mk-ig .hd .av{width:32px;height:32px}
+.mk-ig .un{font-weight:600;font-size:14px}
+.mk-ig .acts{display:flex;gap:15px;padding:11px 13px 7px;color:#262626}
+.mk-ig .acts .sp{margin-left:auto}
+.mk-ig .acts .ico{width:22px;height:22px}
+.mk-ig .likes{padding:0 13px;font-weight:600;font-size:14px}
+.mk-ig .cap{padding:5px 13px 0;font-size:14px;line-height:1.45}
+.mk-ig .cap .un{margin-right:5px}
+.mk-ig .time{padding:7px 13px 13px;font-size:10px;letter-spacing:.3px;color:#8e8e8e;text-transform:uppercase}
+/* Facebook */
+.mk-fb{border:1px solid #dadde1;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.08);color:#050505}
+.mk-fb .hd{display:flex;gap:10px;padding:12px 16px 0;align-items:center}
+.mk-fb .nm{font-weight:600;font-size:15px}
+.mk-fb .sub{font-size:12.5px;color:#65676b;display:flex;align-items:center;gap:4px;margin-top:1px}
+.mk-fb .dots{color:#65676b}
+.mk-fb .txt{padding:9px 16px 12px;font-size:15px;line-height:1.4}
+.mk-fb .stats{display:flex;align-items:center;gap:7px;padding:10px 16px;font-size:14px;color:#65676b}
+.mk-fb .emoj{display:flex}
+.mk-fb .em{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.mk-fb .em svg{width:9px;height:9px}
+.mk-fb .em.l{background:#1877f2;color:#fff;z-index:1}
+.mk-fb .em.h{background:#f33e58;color:#fff;margin-left:-5px}
+.mk-fb .right{margin-left:auto}
+.mk-fb .bbar{display:flex;border-top:1px solid #dadde1;margin:0 12px;padding:4px 0 5px}
+.mk-fb .bt{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:8px 0;color:#65676b;font-weight:600;font-size:14px}
+/* LinkedIn */
+.mk-li{border:1px solid #e0dfdc;border-radius:8px;color:rgba(0,0,0,.9)}
+.mk-li .hd{display:flex;gap:10px;padding:13px 16px 0}
+.mk-li .av{width:48px;height:48px;border-radius:2px}
+.mk-li .nm{font-weight:600;font-size:14px;line-height:1.3}
+.mk-li .sub{font-size:12px;color:rgba(0,0,0,.6);line-height:1.35}
+.mk-li .sub .in{display:inline-flex;align-items:center;gap:3px;vertical-align:-1px}
+.mk-li .dots{color:rgba(0,0,0,.6)}
+.mk-li .txt{padding:11px 16px 13px;font-size:14px;line-height:1.5}
+.mk-li .stats{display:flex;align-items:center;gap:7px;padding:9px 16px;font-size:12px;color:rgba(0,0,0,.6)}
+.mk-li .emoj{display:flex}
+.mk-li .em{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.mk-li .em svg{width:8px;height:8px}
+.mk-li .em.l{background:#378fe9;color:#fff;z-index:1}
+.mk-li .em.h{background:#df704d;color:#fff;margin-left:-4px}
+.mk-li .right{margin-left:auto}
+.mk-li .bbar{display:flex;border-top:1px solid #ebebeb;margin:0 8px;padding:4px 0}
+.mk-li .bt{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;color:rgba(0,0,0,.6);font-weight:600;font-size:13px}
