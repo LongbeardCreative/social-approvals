@@ -38,7 +38,8 @@ export type Action =
   | { type: 'setCopy'; id: PlatformId; value: string }
   | { type: 'setImage'; id: PlatformId; img: string | null; note: string }
   | { type: 'copyToAll'; from: PlatformId }
-  | { type: 'imageToAll'; from: PlatformId };
+  | { type: 'imageToAll'; from: PlatformId }
+  | { type: 'reset' };
 
 function withPlatform(
   s: EditorState,
@@ -104,6 +105,8 @@ export function reducer(s: EditorState, a: Action): EditorState {
       const cur = src.posts[src.cur];
       return applyToAllCurrent(s, { img: cur.img, note: cur.note });
     }
+    case 'reset':
+      return initialState();
     default:
       return s;
   }

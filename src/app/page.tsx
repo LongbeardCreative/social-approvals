@@ -3,6 +3,7 @@
 import { useReducer, useState } from 'react';
 import { reducer, initialState, PLATFORMS } from '@/components/editor-state';
 import { PlatformCard } from '@/components/PlatformCard';
+import { AVATAR } from '@/components/avatar';
 import { parseTask } from '@/lib/asana';
 import s from '@/components/editor.module.css';
 
@@ -13,11 +14,16 @@ export default function EditorPage() {
   const [createdId, setCreatedId] = useState<string | null>(null);
 
   const gid = parseTask(state.asanaTask);
-  const asanaHint = !state.asanaTask.trim()
-    ? { cls: s.hint, text: 'Create the Asana task first, then paste its link here.' }
+  const asanaHintCls = !state.asanaTask.trim()
+    ? s.hint
     : gid
-      ? { cls: `${s.hint} ${s.ok}`, text: `✓ Task ${gid} detected — the decision will post there.` }
-      : { cls: `${s.hint} ${s.bad}`, text: 'No task ID found — paste the full Asana task URL.' };
+      ? `${s.hint} ${s.ok}`
+      : `${s.hint} ${s.bad}`;
+  const asanaHintText = !state.asanaTask.trim()
+    ? 'Create the Asana task first, then paste its link here — the decision gets posted to that task.'
+    : gid
+      ? `✓ Task ${gid} detected — the decision will be commented there and the task assigned back to you.`
+      : 'No task ID found in that — paste the full task URL from Asana (or the bare numeric ID).';
 
   const reviewUrl = createdId ? `${window.location.origin}/r/${createdId}` : '';
 
@@ -56,54 +62,113 @@ export default function EditorPage() {
 
   return (
     <div className={s.page}>
-      <header className={s.header}>
-        <h1>
-          Social <span className={s.gold}>Approvals</span>
-        </h1>
-      </header>
-
       <div className={s.wrap}>
-        <section className={s.bar}>
-          <div className={s.field}>
-            <label>Campaign</label>
-            <input
-              className={s.input}
-              value={state.campaign}
-              placeholder="e.g. Pentecost launch — June"
-              onChange={(e) => dispatch({ type: 'field', key: 'campaign', value: e.target.value })}
-            />
+        <header className={s.app}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className={s.mark} src={AVATAR} alt="Magisterium AI logo" />
+          <div>
+            <h1>Social Approvals</h1>
+            <div className={s.sub}>Longbeard Creative · Magisterium AI asset review builder</div>
           </div>
-          <div className={s.field}>
-            <label>Asana task link</label>
-            <input
-              className={s.input}
-              value={state.asanaTask}
-              placeholder="https://app.asana.com/…"
-              onChange={(e) => dispatch({ type: 'field', key: 'asanaTask', value: e.target.value })}
-            />
+        </header>
+
+        <section className={s.bar} aria-label="Campaign setup">
+          <div className={s.barGrid}>
+            <div className={s.field}>
+              <label>Campaign name</label>
+              <input
+                className={s.input}
+                value={state.campaign}
+                placeholder="e.g. Pentecost launch — June"
+                onChange={(e) => dispatch({ type: 'field', key: 'campaign', value: e.target.value })}
+              />
+            </div>
+            <div className={s.field}>
+              <label>Account name</label>
+              <input
+                className={s.input}
+                value={state.account}
+                onChange={(e) => dispatch({ type: 'field', key: 'account', value: e.target.value })}
+              />
+            </div>
+            <div className={s.field}>
+              <label>Handle</label>
+              <input
+                className={s.input}
+                value={state.handle}
+                onChange={(e) => dispatch({ type: 'field', key: 'handle', value: e.target.value })}
+              />
+            </div>
+            <div className={`${s.field} ${s.span}`}>
+              <label>Asana task link</label>
+              <input
+                className={s.input}
+                value={state.asanaTask}
+                placeholder="https://app.asana.com/… — paste the task this review belongs to"
+                onChange={(e) => dispatch({ type: 'field', key: 'asanaTask', value: e.target.value })}
+              />
+              <div className={asanaHintCls}>{asanaHintText}</div>
+            </div>
           </div>
-          <div className={s.field}>
-            <label>Account</label>
-            <input
-              className={s.input}
-              value={state.account}
-              onChange={(e) => dispatch({ type: 'field', key: 'account', value: e.target.value })}
-            />
+          <div className={s.barfoot}>
+            <div className={s.urlprev}>
+              The review link is created instantly when you generate — no file to upload.
+            </div>
+            <button
+              className={`${s.btn} ${s.btnGhost}`}
+              type="button"
+              onClick={() => {
+                dispatch({ type: 'reset' });
+                setCreatedId(null);
+                setErr(null);
+              }}
+            >
+              Clear draft
+            </button>
+            <button className={`${s.btn} ${s.btnGold}`} type="button" onClick={create} disabled={busy}>
+              {busy ? 'Generating…' : 'Generate review page'}
+            </button>
           </div>
-          <div className={s.field}>
-            <label>Handle</label>
-            <input
-              className={s.input}
-              value={state.handle}
-              onChange={(e) => dispatch({ type: 'field', key: 'handle', value: e.target.value })}
-            />
-          </div>
-          <div className={`${s.field} ${s.span}`}>
-            <div className={asanaHint.cls}>{asanaHint.text}</div>
-          </div>
+          {err && !createdId && (
+            <div className={s.errorMsg} style={{ marginTop: 10 }}>
+              {err}
+            </div>
+          )}
         </section>
 
-        <main className={s.grid}>
+        {createdId && (
+          <section className={s.done} aria-live="polite">
+            <h2>Review created</h2>
+            <p>
+              Paste this link into the Asana task and assign Matthew. It is live immediately — no
+              upload, no wait.
+            </p>
+            <div className={s.linkrow}>
+              <input className={s.input} readOnly value={reviewUrl} aria-label="Share link" />
+              <button
+                className={`${s.btn} ${s.btnGhost}`}
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(reviewUrl)}
+              >
+                Copy link
+              </button>
+            </div>
+            <div className={s.acts}>
+              <button
+                className={`${s.btn} ${s.btnGhost}`}
+                type="button"
+                onClick={() => setCreatedId(null)}
+              >
+                Create another
+              </button>
+            </div>
+            <p className={s.miniNote}>
+              Note: that link opens the reviewer&apos;s page, which is built in the next stage.
+            </p>
+          </section>
+        )}
+
+        <main className={s.cardsGrid}>
           {PLATFORMS.map(({ id, label }) => (
             <PlatformCard
               key={id}
@@ -117,37 +182,10 @@ export default function EditorPage() {
           ))}
         </main>
 
-        {!createdId && (
-          <div className={s.createRow}>
-            <button className={`${s.btn} ${s.btnGold}`} type="button" onClick={create} disabled={busy}>
-              {busy ? 'Creating…' : 'Create review'}
-            </button>
-            {err && <span className={s.errorMsg}>{err}</span>}
-          </div>
-        )}
-
-        {createdId && (
-          <div className={s.success}>
-            <h2>Review created ✓</h2>
-            <p className={s.hint}>Paste this link into the Asana task and assign Matthew.</p>
-            <div className={s.linkBox}>
-              <span className={s.linkUrl}>{reviewUrl}</span>
-              <button
-                className={`${s.btn} ${s.btnGold}`}
-                type="button"
-                onClick={() => navigator.clipboard?.writeText(reviewUrl)}
-              >
-                Copy link
-              </button>
-              <button className={s.btn} type="button" onClick={() => setCreatedId(null)}>
-                Create another
-              </button>
-            </div>
-            <p className={s.hint} style={{ marginTop: 10 }}>
-              Note: that link opens the reviewer page, which is built in the next stage.
-            </p>
-          </div>
-        )}
+        <footer className={s.footer}>
+          Self-contained editor · creates an instant review link · nothing leaves this page until you
+          generate
+        </footer>
       </div>
     </div>
   );
