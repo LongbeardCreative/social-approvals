@@ -8,3 +8,69 @@ export function parseTask(input: string): string {
   const runs = s.split('?')[0].match(/\d{10,}/g);
   return runs ? runs[runs.length - 1] : '';
 }
+
+const ASANA = 'https://app.asana.com/api/1.0';
+
+export type Decision = 'Approved' | 'Revisions requested';
+
+/** True only when the Asana env needed to post is present. */
+export function asanaConfigured(): boolean {
+  return Boolean(process.env.ASANA_TOKEN && process.env.ASSIGNEE);
+}
+
+/** The comment text, ported verbatim from worker.js. */
+export function decisionComment(
+  decision: Decision,
+  reviewer: string,
+  feedback: string,
+  url: string,
+): string {
+  const link = url ? `\n\nReview page: ${url}` : '';
+  return decision === 'Approved'
+    ? `✅ Approved by ${reviewer}${link}`
+    : `🔁 Revisions requested by ${reviewer}:\n\n${feedback || '(no notes left)'}${link}`;
+}
+
+export type DecisionResult =
+  | { ok: true; warning?: string }
+  | { ok: false; status: number; detail: string };
+
+/** Post the decision comment + reassign the task (ported from worker.js). */
+export async function postDecisionToAsana(opts: {
+  task: string;
+  decision: Decision;
+  feedback: string;
+  url: string;
+  token: string;
+  assignee: string;
+  reviewer: string;
+}): Promise<DecisionResult> {
+  const text = decisionComment(opts.decision, opts.reviewer, opts.feedback, opts.url);
+  const headers = {
+    Authorization: `Bearer ${opts.token}`,
+    'Content-Type': 'application/json',
+  };
+
+  // 1. Comment on the task
+  const c = await fetch(`${ASANA}/tasks/${opts.task}/stories`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ data: { text } }),
+  });
+  if (!c.ok) {
+    const detail = await c.text().catch(() => '');
+    return { ok: false, status: c.status, detail: detail.slice(0, 500) };
+  }
+
+  // 2. Reassign the task back
+  const a = await fetch(`${ASANA}/tasks/${opts.task}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ data: { assignee: opts.assignee } }),
+  });
+  if (!a.ok) {
+    return { ok: true, warning: `comment posted, but reassign failed (${a.status})` };
+  }
+
+  return { ok: true };
+}
