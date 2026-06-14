@@ -9,8 +9,12 @@ import {
   R2_BUCKET,
   R2_PUBLIC_BASE_URL,
 } from '@/lib/r2';
+import { isAuthed } from '@/lib/auth';
 
 export async function POST(request: Request) {
+  if (!(await isAuthed(request))) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
   if (!r2Configured()) {
     return NextResponse.json({ error: 'R2 is not configured' }, { status: 500 });
   }

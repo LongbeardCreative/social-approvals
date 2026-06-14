@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { CreateReviewInput } from '@/lib/review-input';
 import { createReview } from '@/db/reviews';
+import { isAuthed } from '@/lib/auth';
 
 export async function POST(request: Request) {
+  if (!(await isAuthed(request))) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+
   let json: unknown;
   try {
     json = await request.json();

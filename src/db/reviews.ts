@@ -35,3 +35,25 @@ export async function markReviewDecided(
     .set({ status, decisionNotes, decidedAt: new Date() })
     .where(eq(reviews.id, id));
 }
+
+/** Overwrite a review's content and reset it to pending (a new revision round). */
+export async function updateReview(
+  id: string,
+  data: Omit<NewReview, 'id'>,
+): Promise<Review | null> {
+  const [row] = await getDb()
+    .update(reviews)
+    .set({
+      campaign: data.campaign,
+      account: data.account,
+      handle: data.handle,
+      asanaTaskGid: data.asanaTaskGid,
+      platforms: data.platforms,
+      status: 'pending',
+      decisionNotes: null,
+      decidedAt: null,
+    })
+    .where(eq(reviews.id, id))
+    .returning();
+  return row ?? null;
+}
