@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import s from '@/components/editor.module.css';
 import type { GateStatus } from '@/lib/asana';
 
@@ -24,4 +25,30 @@ export function StatusBadge({ state }: { state: BadgeState }) {
       <Item label="Images" value={state.images} />
     </div>
   );
+}
+
+export function AsanaStatus({ gid }: { gid: string }) {
+  const [state, setState] = useState<BadgeState>('loading');
+
+  useEffect(() => {
+    if (!gid) return;
+    let live = true;
+    setState('loading');
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/asana/status?gid=${encodeURIComponent(gid)}`);
+        const j = (await res.json()) as { ok?: boolean; copy?: GateStatus; images?: GateStatus };
+        if (!live) return;
+        setState(j.ok && j.copy && j.images ? { copy: j.copy, images: j.images } : 'unavailable');
+      } catch {
+        if (live) setState('unavailable');
+      }
+    }, 500);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [gid]);
+
+  return <StatusBadge state={state} />;
 }
