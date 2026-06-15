@@ -6,7 +6,7 @@ import { AVATAR } from '@/components/avatar';
 import { Mockup } from '@/components/Mockup';
 import { Carousel } from '@/components/Carousel';
 import { Decision } from '@/components/Decision';
-import { reviewIntro, approveLabel } from '@/lib/review-copy';
+import { reviewIntro } from '@/lib/review-copy';
 import s from '@/components/review.module.css';
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -81,13 +81,15 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
         <section className={s.decide}>
           <h2>Your decision</h2>
           <p className={s.sub}>
-            One decision covers the whole set. It is posted straight to the Asana task, and the task
-            returns to Johan automatically.
+            One decision per area. Copy decisions go to Jenna; images to Johan. Posted straight to the
+            Asana task.
           </p>
           <Decision
             reviewId={review.id}
             campaign={review.campaign}
-            approveLabel={approveLabel(total)}
+            total={total}
+            copyStatus={review.copyStatus}
+            imageStatus={review.imageStatus}
           />
         </section>
 

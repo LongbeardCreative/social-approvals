@@ -2,30 +2,47 @@
 
 import { useState, type ReactNode } from 'react';
 import s from './review.module.css';
+import type { DecisionScope, ScopeStatus } from '@/db/schema';
 
 type DecisionKind = 'Approved' | 'Revisions requested';
+
+const SCOPES: { id: DecisionScope; label: string }[] = [
+  { id: 'copy', label: 'Copy' },
+  { id: 'images', label: 'Images' },
+  { id: 'everything', label: 'Everything' },
+];
 
 export function Decision({
   reviewId,
   campaign,
-  approveLabel,
+  total,
+  copyStatus,
+  imageStatus,
 }: {
   reviewId: string;
   campaign: string;
-  approveLabel: string;
+  total: number;
+  copyStatus: ScopeStatus;
+  imageStatus: ScopeStatus;
 }) {
+  const [scope, setScope] = useState<DecisionScope>('everything');
   const [phase, setPhase] = useState<'buttons' | 'revise' | 'done'>('buttons');
   const [feedback, setFeedback] = useState('');
   const [busy, setBusy] = useState(false);
   const [okMsg, setOkMsg] = useState('');
   const [errNode, setErrNode] = useState<ReactNode>(null);
 
+  const goesToJenna = scope === 'copy';
+  const recipient = goesToJenna ? 'Jenna' : 'Johan';
+  const approveLabel =
+    scope === 'copy' ? 'Approve copy' : scope === 'images' ? 'Approve images' : `Approve all ${total}`;
+
   function mailto(decision: DecisionKind, notes: string) {
-    const addr = 'johan@longbeard.com';
+    const addr = goesToJenna ? 'jenna@longbeard.com' : 'johan@longbeard.com';
     const url = typeof window !== 'undefined' ? window.location.href : '';
-    const subject = encodeURIComponent(`${decision}: ${campaign}`);
+    const subject = encodeURIComponent(`${decision} (${scope}): ${campaign}`);
     const body = encodeURIComponent(
-      `Decision: ${decision} | Feedback: ${notes || '-'} | Review page: ${url}`,
+      `Decision: ${decision} | Scope: ${scope} | Feedback: ${notes || '-'} | Review page: ${url}`,
     );
     return `mailto:${addr}?subject=${subject}&body=${body}`;
   }
@@ -34,8 +51,8 @@ export function Decision({
     setErrNode(
       <>
         The notification could not be sent from here (network blocked?).{' '}
-        <a href={mailto(decision, notes)}>Email Johan directly</a> — the draft is prefilled with your
-        decision.
+        <a href={mailto(decision, notes)}>Email {recipient} directly</a> — the draft is prefilled with
+        your decision.
       </>,
     );
   }
@@ -47,14 +64,14 @@ export function Decision({
       const res = await fetch(`/api/reviews/${reviewId}/decision`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ decision, feedback: notes.trim() }),
+        body: JSON.stringify({ scope, decision, feedback: notes.trim() }),
       });
       const j = (await res.json().catch(() => null)) as { success?: boolean } | null;
       if (res.ok && j?.success) {
         setOkMsg(
           decision === 'Approved'
-            ? 'Approved — posted to the Asana task and sent back to Johan. Thank you.'
-            : 'Feedback sent — posted to the Asana task and sent back to Johan. Thank you.',
+            ? `Approved — posted to the Asana task and sent to ${recipient}. Thank you.`
+            : `Feedback sent — posted to the Asana task and sent to ${recipient}. Thank you.`,
         );
         setPhase('done');
       } else {
@@ -77,6 +94,22 @@ export function Decision({
 
   return (
     <>
+      <div className={s.scopeRow} role="group" aria-label="What are you reviewing?">
+        {SCOPES.map((sc) => (
+          <button
+            key={sc.id}
+            type="button"
+            className={`${s.scopeBtn} ${scope === sc.id ? s.scopeOn : ''}`}
+            aria-pressed={scope === sc.id}
+            onClick={() => setScope(sc.id)}
+          >
+            {sc.label}
+          </button>
+        ))}
+      </div>
+      <p className={s.routeHint}>
+        Copy goes to Jenna · images come to Johan. (Copy {copyStatus}, images {imageStatus}.)
+      </p>
       {phase === 'buttons' && (
         <div className={s.btns}>
           <button
