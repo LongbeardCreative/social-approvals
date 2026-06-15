@@ -1,10 +1,11 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import {
-  decisionComment,
+  COPY_GATE,
   gateStatusFrom,
   parseTask,
   postDecisionToAsana,
   readGateStatus,
+  scopedDecisionComment,
 } from '@/lib/asana';
 
 describe('parseTask', () => {
@@ -31,21 +32,21 @@ describe('parseTask', () => {
   });
 });
 
-describe('decisionComment', () => {
-  it('approved, with reviewer + link', () => {
-    expect(decisionComment('Approved', 'Matthew', '', 'https://x/r/abc')).toBe(
-      '✅ Approved by Matthew\n\nReview page: https://x/r/abc',
+describe('scopedDecisionComment', () => {
+  it('scoped approve', () => {
+    expect(scopedDecisionComment('copy', 'Approved', 'Matthew', '', 'https://x/r/abc')).toBe(
+      '✅ Copy approved by Matthew\n\nReview page: https://x/r/abc',
     );
   });
-  it('revisions, with feedback', () => {
-    const t = decisionComment('Revisions requested', 'Matthew', 'fix the FB headline', '');
-    expect(t.startsWith('🔁 Revisions requested by Matthew:')).toBe(true);
-    expect(t).toContain('fix the FB headline');
-  });
-  it('revisions, no notes → placeholder', () => {
-    expect(decisionComment('Revisions requested', 'Fr. Gregory', '', '')).toBe(
-      '🔁 Revisions requested by Fr. Gregory:\n\n(no notes left)',
+  it('everything approve', () => {
+    expect(scopedDecisionComment('everything', 'Approved', 'Matthew', '', '')).toBe(
+      '✅ Copy + images approved by Matthew',
     );
+  });
+  it('scoped revisions with feedback', () => {
+    const t = scopedDecisionComment('images', 'Revisions requested', 'Matthew', 'fix it', '');
+    expect(t.startsWith('🔁 Images — revisions requested by Matthew:')).toBe(true);
+    expect(t).toContain('fix it');
   });
 });
 
@@ -77,6 +78,7 @@ describe('postDecisionToAsana', () => {
 
   const base = {
     task: '1209888777666555',
+    scope: 'everything' as const,
     decision: 'Approved' as const,
     feedback: '',
     url: 'https://x/r/abc',
@@ -96,7 +98,9 @@ describe('postDecisionToAsana', () => {
     expect(calls[0].url).toBe('https://app.asana.com/api/1.0/tasks/1209888777666555/stories');
     expect(calls[0].method).toBe('POST');
     expect(calls[0].headers.Authorization).toBe('Bearer tok');
-    expect((calls[0].body as { data: { text: string } }).data.text).toContain('✅ Approved by Matthew');
+    expect((calls[0].body as { data: { text: string } }).data.text).toContain(
+      '✅ Copy + images approved by Matthew',
+    );
     expect(calls[1].method).toBe('PUT');
     expect((calls[1].body as { data: { assignee: string } }).data.assignee).toBe('johan@longbeard.com');
   });
@@ -116,6 +120,28 @@ describe('postDecisionToAsana', () => {
     const res = await postDecisionToAsana(base);
     expect(res.ok).toBe(true);
     expect((res as { warning?: string }).warning).toContain('reassign failed');
+  });
+
+  it('approve with gates: ticks the matching gate subtask', async () => {
+    const hits: string[] = [];
+    globalThis.fetch = (async (url: string | URL, init: RequestInit) => {
+      const u = String(url);
+      hits.push(`${init?.method || 'GET'} ${u}`);
+      if (u.includes('/subtasks')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: [{ gid: '111', name: '3. Matthew Approves Copy', completed: false }],
+          }),
+          text: async () => '',
+        } as Response;
+      }
+      return { ok: true, status: 200, json: async () => ({}), text: async () => '' } as Response;
+    }) as typeof fetch;
+    const res = await postDecisionToAsana({ ...base, scope: 'copy', gates: [COPY_GATE] });
+    expect(res.ok).toBe(true);
+    expect(hits).toContain('PUT https://app.asana.com/api/1.0/tasks/111');
   });
 });
 

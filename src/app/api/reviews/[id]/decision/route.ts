@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getReviewById, markReviewDecided } from '@/db/reviews';
+import { getReviewById, markScopeDecided } from '@/db/reviews';
 import { postDecisionToAsana } from '@/lib/asana';
+import { routingForScope } from '@/lib/decision-routing';
 
 const Body = z.object({
+  scope: z.enum(['copy', 'images', 'everything']).default('everything'),
   decision: z.enum(['Approved', 'Revisions requested']),
   feedback: z.string().optional().default(''),
 });
@@ -20,9 +22,8 @@ export async function POST(request: Request, ctx: RouteContext<'/api/reviews/[id
   }
 
   const token = process.env.ASANA_TOKEN;
-  const assignee = process.env.ASSIGNEE;
   const reviewer = process.env.REVIEWER || 'Matthew';
-  if (!token || !assignee) {
+  if (!token) {
     return NextResponse.json({ success: false, error: 'Asana not configured' }, { status: 500 });
   }
 
@@ -36,25 +37,43 @@ export async function POST(request: Request, ctx: RouteContext<'/api/reviews/[id
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: 'invalid input' }, { status: 400 });
   }
+  const { scope, decision } = parsed.data;
 
   const review = await getReviewById(id);
   if (!review) {
     return NextResponse.json({ success: false, error: 'review not found' }, { status: 404 });
   }
-  if (review.status === 'approved' || review.status === 'revisions') {
+
+  const decided = (s: string) => s !== 'pending';
+  const already =
+    scope === 'copy'
+      ? decided(review.copyStatus)
+      : scope === 'images'
+        ? decided(review.imageStatus)
+        : decided(review.copyStatus) && decided(review.imageStatus);
+  if (already) {
     return NextResponse.json({ success: true, alreadyDecided: true });
+  }
+
+  const routing = routingForScope(scope);
+  const assignee = process.env[routing.assigneeEnv];
+  if (!assignee) {
+    return NextResponse.json({ success: false, error: 'assignee not configured' }, { status: 500 });
   }
 
   const feedback = parsed.data.feedback.trim().slice(0, 8000);
   const url = `${new URL(request.url).origin}/r/${id}`;
   const result = await postDecisionToAsana({
     task: review.asanaTaskGid,
-    decision: parsed.data.decision,
+    scope,
+    decision,
     feedback,
     url,
     token,
     assignee,
     reviewer,
+    gates: routing.gates,
+    mentionGid: routing.mention ? process.env.COPY_REVIEWER_GID : undefined,
   });
 
   if (!result.ok) {
@@ -64,11 +83,7 @@ export async function POST(request: Request, ctx: RouteContext<'/api/reviews/[id
     );
   }
 
-  await markReviewDecided(
-    id,
-    parsed.data.decision === 'Approved' ? 'approved' : 'revisions',
-    feedback,
-  );
+  await markScopeDecided(id, scope, decision, feedback);
   return NextResponse.json(
     result.warning ? { success: true, warning: result.warning } : { success: true },
   );

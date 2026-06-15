@@ -1,3 +1,5 @@
+import type { DecisionScope } from '@/db/schema';
+
 /** Extract an Asana task gid from a pasted URL or bare id (ported from legacy parseTask). */
 export function parseTask(input: string): string {
   const s = String(input || '').trim();
@@ -13,7 +15,7 @@ const ASANA = 'https://app.asana.com/api/1.0';
 
 export type Decision = 'Approved' | 'Revisions requested';
 
-export type SubtaskLite = { name: string; completed: boolean };
+export type SubtaskLite = { gid?: string; name: string; completed: boolean };
 export type GateStatus = 'approved' | 'pending';
 
 /** Name fragments that identify the two approval-gate subtasks (matched case-insensitively). */
@@ -35,7 +37,7 @@ export function gateStatusFrom(subtasks: SubtaskLite[]): { copy: GateStatus; ima
 
 /** Fetch a task's subtasks (name + completed only). Throws on a non-OK response. */
 export async function getSubtasks(task: string, token: string): Promise<SubtaskLite[]> {
-  const r = await fetch(`${ASANA}/tasks/${task}/subtasks?opt_fields=name,completed`, {
+  const r = await fetch(`${ASANA}/tasks/${task}/subtasks?opt_fields=gid,name,completed`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!r.ok) throw new Error(`subtasks ${r.status}`);
@@ -59,34 +61,89 @@ export function asanaConfigured(): boolean {
   return Boolean(process.env.ASANA_TOKEN && process.env.ASSIGNEE);
 }
 
-/** The comment text, ported verbatim from worker.js. */
-export function decisionComment(
+const SCOPE_TEXT: Record<DecisionScope, string> = {
+  copy: 'Copy',
+  images: 'Images',
+  everything: 'Copy + images',
+};
+
+/** Scoped decision comment text (e.g. "✅ Copy approved by Matthew"). */
+export function scopedDecisionComment(
+  scope: DecisionScope,
   decision: Decision,
   reviewer: string,
   feedback: string,
   url: string,
 ): string {
   const link = url ? `\n\nReview page: ${url}` : '';
+  const what = SCOPE_TEXT[scope];
   return decision === 'Approved'
-    ? `✅ Approved by ${reviewer}${link}`
-    : `🔁 Revisions requested by ${reviewer}:\n\n${feedback || '(no notes left)'}${link}`;
+    ? `✅ ${what} approved by ${reviewer}${link}`
+    : `🔁 ${what} — revisions requested by ${reviewer}:\n\n${feedback || '(no notes left)'}${link}`;
+}
+
+/** Complete the gate subtasks matching the given name fragments. Best-effort; false on any failure. */
+export async function completeGates(
+  task: string,
+  token: string,
+  fragments: string[],
+): Promise<boolean> {
+  if (fragments.length === 0) return true;
+  try {
+    const subs = await getSubtasks(task, token);
+    const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+    for (const frag of fragments) {
+      const f = frag.toLowerCase();
+      const hit = subs.find((s) => (s.name || '').toLowerCase().includes(f));
+      if (hit?.gid && !hit.completed) {
+        const r = await fetch(`${ASANA}/tasks/${hit.gid}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({ data: { completed: true } }),
+        });
+        if (!r.ok) return false;
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Add a collaborator to a task (Asana notifies them). Best-effort. */
+export async function addFollower(task: string, token: string, gid: string): Promise<boolean> {
+  const r = await fetch(`${ASANA}/tasks/${task}/addFollowers`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: { followers: [gid] } }),
+  });
+  return r.ok;
 }
 
 export type DecisionResult =
   | { ok: true; warning?: string }
   | { ok: false; status: number; detail: string };
 
-/** Post the decision comment + reassign the task (ported from worker.js). */
+/** Post the scoped decision comment, reassign, optionally notify + tick gates (on approval). */
 export async function postDecisionToAsana(opts: {
   task: string;
+  scope: DecisionScope;
   decision: Decision;
   feedback: string;
   url: string;
   token: string;
   assignee: string;
   reviewer: string;
+  gates?: string[];
+  mentionGid?: string;
 }): Promise<DecisionResult> {
-  const text = decisionComment(opts.decision, opts.reviewer, opts.feedback, opts.url);
+  const text = scopedDecisionComment(
+    opts.scope,
+    opts.decision,
+    opts.reviewer,
+    opts.feedback,
+    opts.url,
+  );
   const headers = {
     Authorization: `Bearer ${opts.token}`,
     'Content-Type': 'application/json',
@@ -103,15 +160,27 @@ export async function postDecisionToAsana(opts: {
     return { ok: false, status: c.status, detail: detail.slice(0, 500) };
   }
 
-  // 2. Reassign the task back
+  const warnings: string[] = [];
+
+  // 2. Reassign the task to the routed person
   const a = await fetch(`${ASANA}/tasks/${opts.task}`, {
     method: 'PUT',
     headers,
     body: JSON.stringify({ data: { assignee: opts.assignee } }),
   });
-  if (!a.ok) {
-    return { ok: true, warning: `comment posted, but reassign failed (${a.status})` };
+  if (!a.ok) warnings.push(`reassign failed (${a.status})`);
+
+  // 3. Notify the copy reviewer (Jenna on "everything")
+  if (opts.mentionGid) {
+    const ok = await addFollower(opts.task, opts.token, opts.mentionGid);
+    if (!ok) warnings.push('could not notify the copy reviewer');
   }
 
-  return { ok: true };
+  // 4. Tick the gate subtask(s) on approval
+  if (opts.decision === 'Approved' && opts.gates?.length) {
+    const ok = await completeGates(opts.task, opts.token, opts.gates);
+    if (!ok) warnings.push('could not tick the gate subtask');
+  }
+
+  return warnings.length ? { ok: true, warning: warnings.join('; ') } : { ok: true };
 }
