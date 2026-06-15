@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { decisionComment, parseTask, postDecisionToAsana } from '@/lib/asana';
+import { decisionComment, gateStatusFrom, parseTask, postDecisionToAsana } from '@/lib/asana';
 
 describe('parseTask', () => {
   it('returns a bare numeric id', () => {
@@ -110,5 +110,27 @@ describe('postDecisionToAsana', () => {
     const res = await postDecisionToAsana(base);
     expect(res.ok).toBe(true);
     expect((res as { warning?: string }).warning).toContain('reassign failed');
+  });
+});
+
+describe('gateStatusFrom', () => {
+  it('maps the gate subtasks to copy/images status', () => {
+    const subs = [
+      { name: '2. Draft Copy in Workbook (All Languages)', completed: true },
+      { name: '3. Matthew Approves Copy', completed: true },
+      { name: '6. Matthew Approves Creative', completed: false },
+    ];
+    expect(gateStatusFrom(subs)).toEqual({ copy: 'approved', images: 'pending' });
+  });
+
+  it('is case- and number-insensitive', () => {
+    expect(gateStatusFrom([{ name: 'matthew APPROVES copy', completed: true }])).toEqual({
+      copy: 'approved',
+      images: 'pending',
+    });
+  });
+
+  it('missing gates → both pending', () => {
+    expect(gateStatusFrom([])).toEqual({ copy: 'pending', images: 'pending' });
   });
 });

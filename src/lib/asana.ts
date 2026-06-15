@@ -13,6 +13,26 @@ const ASANA = 'https://app.asana.com/api/1.0';
 
 export type Decision = 'Approved' | 'Revisions requested';
 
+export type SubtaskLite = { name: string; completed: boolean };
+export type GateStatus = 'approved' | 'pending';
+
+/** Name fragments that identify the two approval-gate subtasks (matched case-insensitively). */
+export const COPY_GATE = 'approves copy';
+export const CREATIVE_GATE = 'approves creative';
+
+function gateApproved(subtasks: SubtaskLite[], fragment: string): boolean {
+  const f = fragment.toLowerCase();
+  return subtasks.some((s) => (s.name || '').toLowerCase().includes(f) && s.completed);
+}
+
+/** Pure: turn a subtask list into copy/images approval status. */
+export function gateStatusFrom(subtasks: SubtaskLite[]): { copy: GateStatus; images: GateStatus } {
+  return {
+    copy: gateApproved(subtasks, COPY_GATE) ? 'approved' : 'pending',
+    images: gateApproved(subtasks, CREATIVE_GATE) ? 'approved' : 'pending',
+  };
+}
+
 /** True only when the Asana env needed to post is present. */
 export function asanaConfigured(): boolean {
   return Boolean(process.env.ASANA_TOKEN && process.env.ASSIGNEE);
