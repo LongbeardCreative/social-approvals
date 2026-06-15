@@ -167,6 +167,31 @@
 .hint.bad {
   color: var(--bad);
 }
+.statusRow {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--mut);
+}
+.statusItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.statusItem.approved {
+  color: var(--gold);
+}
+.statusItem.approved::before {
+  content: '✓';
+}
+.statusItem.pending {
+  color: var(--mut);
+}
+.statusItem.pending::before {
+  content: '◷';
+}
 .errorMsg {
   color: var(--bad);
   font-size: 14px;

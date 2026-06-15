@@ -3,6 +3,7 @@
 import { useReducer, useState } from 'react';
 import { reducer, initialState, PLATFORMS, type EditorState } from '@/components/editor-state';
 import { PlatformCard } from '@/components/PlatformCard';
+import { AsanaStatus } from '@/components/AsanaStatus';
 import { AVATAR } from '@/components/avatar';
 import { parseTask } from '@/lib/asana';
 import s from '@/components/editor.module.css';
@@ -118,6 +119,7 @@ export function Editor({ initial, reviewId }: { initial?: EditorState; reviewId?
                 onChange={(e) => dispatch({ type: 'field', key: 'asanaTask', value: e.target.value })}
               />
               <div className={asanaHintCls}>{asanaHintText}</div>
+              {gid && <AsanaStatus gid={gid} />}
             </div>
           </div>
           <div className={s.barfoot}>
