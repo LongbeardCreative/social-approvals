@@ -1,5 +1,11 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { decisionComment, gateStatusFrom, parseTask, postDecisionToAsana } from '@/lib/asana';
+import {
+  decisionComment,
+  gateStatusFrom,
+  parseTask,
+  postDecisionToAsana,
+  readGateStatus,
+} from '@/lib/asana';
 
 describe('parseTask', () => {
   it('returns a bare numeric id', () => {
@@ -132,5 +138,39 @@ describe('gateStatusFrom', () => {
 
   it('missing gates → both pending', () => {
     expect(gateStatusFrom([])).toEqual({ copy: 'pending', images: 'pending' });
+  });
+});
+
+describe('readGateStatus', () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it('fetches subtasks and returns gate status', async () => {
+    globalThis.fetch = (async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: [
+          { name: '3. Matthew Approves Copy', completed: true },
+          { name: '6. Matthew Approves Creative', completed: false },
+        ],
+      }),
+    })) as typeof fetch;
+    expect(await readGateStatus('1209888777666555', 'tok')).toEqual({
+      ok: true,
+      copy: 'approved',
+      images: 'pending',
+    });
+  });
+
+  it('ok:false when the request fails', async () => {
+    globalThis.fetch = (async () => ({
+      ok: false,
+      status: 404,
+      json: async () => ({}),
+    })) as typeof fetch;
+    expect(await readGateStatus('1209888777666555', 'tok')).toEqual({ ok: false });
   });
 });

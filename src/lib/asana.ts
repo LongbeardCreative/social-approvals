@@ -33,6 +33,27 @@ export function gateStatusFrom(subtasks: SubtaskLite[]): { copy: GateStatus; ima
   };
 }
 
+/** Fetch a task's subtasks (name + completed only). Throws on a non-OK response. */
+export async function getSubtasks(task: string, token: string): Promise<SubtaskLite[]> {
+  const r = await fetch(`${ASANA}/tasks/${task}/subtasks?opt_fields=name,completed`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!r.ok) throw new Error(`subtasks ${r.status}`);
+  const j = (await r.json()) as { data?: SubtaskLite[] };
+  return j.data ?? [];
+}
+
+export type GateStatusResult = { ok: true; copy: GateStatus; images: GateStatus } | { ok: false };
+
+/** Read a task's gate status; never throws — returns { ok: false } if it can't be read. */
+export async function readGateStatus(task: string, token: string): Promise<GateStatusResult> {
+  try {
+    return { ok: true, ...gateStatusFrom(await getSubtasks(task, token)) };
+  } catch {
+    return { ok: false };
+  }
+}
+
 /** True only when the Asana env needed to post is present. */
 export function asanaConfigured(): boolean {
   return Boolean(process.env.ASANA_TOKEN && process.env.ASSIGNEE);
