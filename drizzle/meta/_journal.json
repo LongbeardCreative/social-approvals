@@ -8,6 +8,13 @@
       "when": 1781338749567,
       "tag": "0000_wild_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781524287644,
+      "tag": "0001_hot_amphibian",
+      "breakpoints": true
     }
   ]
 }

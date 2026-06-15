@@ -7,6 +7,8 @@ export type PlatformState = { on: boolean; cur: number; posts: Post[] };
 export type Platforms = Record<string, PlatformState>;
 
 export type ReviewStatus = 'draft' | 'pending' | 'approved' | 'revisions';
+export type ScopeStatus = 'pending' | 'approved' | 'revisions';
+export type DecisionScope = 'copy' | 'images' | 'everything';
 
 export const reviews = pgTable('reviews', {
   id: text('id').primaryKey(), // nanoid slug — the public /r/{id}
@@ -18,6 +20,12 @@ export const reviews = pgTable('reviews', {
   status: text('status').$type<ReviewStatus>().notNull().default('pending'),
   decisionNotes: text('decision_notes'),
   decidedAt: timestamp('decided_at', { withTimezone: true }),
+  copyStatus: text('copy_status').$type<ScopeStatus>().notNull().default('pending'),
+  imageStatus: text('image_status').$type<ScopeStatus>().notNull().default('pending'),
+  copyNotes: text('copy_notes'),
+  imageNotes: text('image_notes'),
+  copyDecidedAt: timestamp('copy_decided_at', { withTimezone: true }),
+  imageDecidedAt: timestamp('image_decided_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
